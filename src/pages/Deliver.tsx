@@ -20,8 +20,18 @@ export function Deliver() {
   return (
     <>
       <FormControl onSubmit={handleStudentConfirmation}>
-        <Flex maxW={350} mx="auto" direction="column" justify="space-around" h="100vh">
-          <Flex justify="space-between" gridGap={4} align="stretch">
+        <Flex 
+          maxW={350} 
+          mx="auto" 
+          direction="column" 
+          justify="space-around" 
+          h="100vh"
+        >
+          <Flex 
+            justify="space-between" 
+            gridGap={4} 
+            align="stretch"
+          >
             <Box
               mt={4}
               w="100%"
@@ -30,15 +40,31 @@ export function Deliver() {
               p={4}
             >
               <Text fontSize={14}>Nome</Text>
-              <Input variant="flushed" onChange={e => setName(e.target.value)} />
+              <Input 
+                variant="flushed" 
+                onChange={e => setName(e.target.value)} 
+              />
             </Box>
-            <Box mt={4} borderWidth={1} borderRadius={4} p={4}>
+            <Box 
+              mt={4} 
+              borderWidth={1} 
+              borderRadius={4} 
+              p={4}
+            >
               <Text fontSize={14}>Número</Text>
-              <Input variant="flushed" onChange={e => setStudentCalled(Number(e.target.value))} />
+              <Input 
+                variant="flushed" 
+                onChange={e => setStudentCalled(Number(e.target.value))} 
+              />
             </Box>
           </Flex>
 
-          <Input type="file" borderStyle="dashed" p={4} border="1px solid red" />
+          <Input 
+            type="file" 
+            borderStyle="dashed" 
+            p={4} 
+            border="1px solid red" 
+          />
 
           <Flex
             as="button"
@@ -49,10 +75,18 @@ export function Deliver() {
             align="center"
             borderColor="#7474FE"
           >
-            <Text color="#7474FE" mr={2}>Compartilhar</Text>
+            <Text 
+              color="#7474FE" 
+              mr={2}
+            >Compartilhar</Text>
             <FiShare2 color="#7474FE" />
           </Flex>
-          <Button bg="#7474FE" p={8} type="submit" disabled={!name || !studentCalled}>
+          <Button 
+            bg="#7474FE" 
+            p={8} 
+            type="submit" 
+            disabled={!name || !studentCalled}
+          >
             <Text color="#FFF">ENVIAR</Text>
           </Button>
         </Flex>

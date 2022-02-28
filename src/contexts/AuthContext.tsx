@@ -1,5 +1,5 @@
 import { useEffect, useState, createContext, ReactNode, useContext } from "react";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "firebase/auth";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "firebase/auth";
 import { app } from "../services/firebase";
 
 type User = {
@@ -9,44 +9,39 @@ type User = {
 }
 
 type AuthContextProps = {
-  user: User | null;
+  user: User;
   signIn: () => void;
 }
 
-type AppContextProps = {
+type AuthContextProviderProps = {
   children: ReactNode;
 }
 
 export const AuthContext = createContext({} as AuthContextProps);
 
-export function AppContext({ children }: AppContextProps) {
+export function AuthContextProvider({ children }: AuthContextProviderProps) {
   const auth = getAuth(app);
 
-  const [user, setUser] = useState<User | null>({} as User | null);
+  const [user, setUser] = useState<User>({} as User);
 
   useEffect(() => {
+    console.log("Está vindo aqui");
+
     onAuthStateChanged(auth, (user) => {
       if (!user) {
         console.log("Usuario não carregado");
       }
 
       setUser({
-        displayName: String(user?.displayName),
-        photoURL: String(user?.photoURL),
-        uid: String(user?.uid)
+        displayName: user?.displayName ?? null,
+        photoURL: user?.photoURL ?? null,
+        uid: user?.uid ?? null
       });
     });
   }, []);
 
   async function signIn() {
     const provider = new GoogleAuthProvider();
-
-    if (user) {
-      signOut(auth);
-      setUser(null);
-
-      return
-    };
 
     signInWithPopup(auth, provider)
       .then(response => {
