@@ -3,13 +3,14 @@ import { Box, Flex, Input, Button, Text, Image, Skeleton, Stack } from "@chakra-
 import { MdAdd } from "react-icons/md";
 import { getDocs, getFirestore, collection, addDoc, query, where } from "firebase/firestore";
 import { app } from "../services/firebase";
+import { useAuth } from "../contexts/AuthContext";
 
 import { List } from "../components/List";
-import { useAuth } from "../contexts/AuthContext";
 
 type Activity = {
   id: number;
   name: string;
+  userId: string | null;
 }
 
 export function Activities() {
@@ -33,53 +34,43 @@ export function Activities() {
     }
 
     return lastQuantityOfData.map(size =>
-      (
-        <Skeleton
-          h="40px"
-          key={size}
-          startColor="rgba(116, 116, 254, .5)"
-          endColor="rgba(116, 116, 254, 1)"
-        />
-      )
+    (
+      <Skeleton
+        h="40px"
+        key={size}
+        startColor="rgba(116, 116, 254, .5)"
+        endColor="rgba(116, 116, 254, 1)"
+      />
+    )
     );
   }
 
-  async function loadData() {
-    try {
-      setLoadData(true);
-
-      const activityCollection = collection(database, "activities");
-
-      const queryActivitiesUser = query(
-        activityCollection,
-        where("userId", "==", user.uid)
-      );
-
-      const response = await getDocs(queryActivitiesUser);
-      const data = response.docs
-        .map(doc => doc.data())
-        .map(doc => {
-          return {
-            id: Math.random(),
-            name: doc.name
-          }
-        });
-
-      if (data.length > 0) {
-        localStorage.setItem("@lastQuantityActivities", JSON.stringify(data.length));
-      }
-
-      setTasks(data);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoadData(false);
-    }
-  }
 
   useEffect(() => {
-    loadData();
+   try {
+    setLoadData(true);
+
+    const activityCollection = collection(database, "activities");
+
+    const queryActivitiesUser = query(activityCollection, where("userId", "==", user.uid));
+
+    getDocs(queryActivitiesUser)
+      .then(response => {
+        const data = response.docs.map(doc => doc.data()) as Activity[];
+
+        if (data.length > 0) {
+          localStorage.setItem("@lastQuantityActivities", JSON.stringify(data.length));
+        }
+
+        setTasks(data);
+      })
+      .catch(error => console.log(error))
+      .finally(() => setLoadData(false));
+   } catch (error) {
+     console.log(error);
+   }
   }, [user]);
+
 
   async function handleAddTask() {
     if (!task) return;
@@ -87,12 +78,15 @@ export function Activities() {
     try {
       setLoadButton(true);
 
-      await addDoc(collection(database, "activities"), {
+      const newTask: Activity = {
+        id: Math.random(),
         name: task,
-        userId: String(user.uid)
-      });
-      
-      setTasks(taks => [...taks, { id: Math.random(), name: task }]);
+        userId: user.uid
+      }
+
+      await addDoc(collection(database, "activities"), newTask);
+
+      setTasks(taks => [...taks, newTask]);
 
       setTask("");
     } catch (error) {
@@ -101,7 +95,7 @@ export function Activities() {
       setLoadButton(false);
     }
   }
-
+  
   return (
     <Box
       maxW={340}
@@ -118,7 +112,7 @@ export function Activities() {
             fontWeight={500}
             as="span"
           >
-            {!user.displayName ? "Por favor" : "Suas listas"}
+            {user.displayName ? "Suas listas" : "Por favor"}
           </Text>
           <Text
             fontSize={24}
@@ -142,7 +136,7 @@ export function Activities() {
             onClick={signIn}
             borderRadius="50%"
             border="2px solid #FFF"
-            src={String(user?.photoURL)}
+            src={String(user.photoURL)}
             alt="Foto Perfil"
           />
         </Box>
