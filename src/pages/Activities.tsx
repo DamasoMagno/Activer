@@ -6,6 +6,7 @@ import { app } from "../services/firebase";
 import { useAuth } from "../contexts/AuthContext";
 
 import { List } from "../components/List";
+import { SignIn } from "./SignIn";
 
 type Activity = {
   id: string;
@@ -15,7 +16,7 @@ type Activity = {
 export function Activities() {
   const database = getFirestore(app);
 
-  const { user } = useAuth();
+  const { user, signIn } = useAuth();
 
   const [task, setTask] = useState<string>("");
   const [tasks, setTasks] = useState<Activity[]>([]);
@@ -137,6 +138,7 @@ export function Activities() {
             _hover={{ filter: "brightness(0.8)" }}
             w="100%"
             borderRadius="50%"
+            onClick={signIn}
             border="2px solid #FFF"
             src={String(user.photoURL)}
             alt="Foto Perfil"
