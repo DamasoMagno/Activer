@@ -48,6 +48,8 @@ export function Activities() {
   useEffect(() => {
     setLoadData(true);
 
+    if(!user.uid) return
+    
     const activityCollection = collection(database, "activities");
 
     const queryActivitiesUser = query(activityCollection, where("userId", "==", user.uid));
