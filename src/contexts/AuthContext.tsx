@@ -25,17 +25,15 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) {
   const [user, setUser] = useState<User>({} as User);
 
   useEffect(() => {
-    console.log("Está vindo aqui");
-
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
+    onAuthStateChanged(auth, (newUser) => {
+      if (!newUser) {
         console.log("Usuario não carregado");
       }
-
+      
       setUser({
-        displayName: user?.displayName ?? null,
-        photoURL: user?.photoURL ?? null,
-        uid: user?.uid ?? null
+        displayName: newUser?.displayName ?? null,
+        photoURL: newUser?.photoURL ?? null,
+        uid: newUser?.uid ?? null
       });
     });
   }, []);

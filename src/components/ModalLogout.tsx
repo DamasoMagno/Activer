@@ -1,4 +1,4 @@
-import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, useDisclosure, Button } from '@chakra-ui/react';
+import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, useDisclosure, Button } from '@chakra-ui/react';
 
 export function ModalLogout() {
   const { isOpen, onClose } = useDisclosure();
@@ -7,7 +7,9 @@ export function ModalLogout() {
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Deseja Sair?</ModalHeader>
+        <ModalHeader>
+          Deseja Sair?
+        </ModalHeader>
         <ModalBody>
           <Button onClick={onClose} color="red">
             Cancelar

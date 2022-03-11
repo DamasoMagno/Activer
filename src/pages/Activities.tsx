@@ -8,15 +8,14 @@ import { useAuth } from "../contexts/AuthContext";
 import { List } from "../components/List";
 
 type Activity = {
-  id: number;
+  id: string;
   name: string;
-  userId: string | null;
 }
 
 export function Activities() {
   const database = getFirestore(app);
 
-  const { user, signIn } = useAuth();
+  const { user } = useAuth();
 
   const [task, setTask] = useState<string>("");
   const [tasks, setTasks] = useState<Activity[]>([]);
@@ -45,9 +44,8 @@ export function Activities() {
     );
   }
 
-
+  
   useEffect(() => {
-   try {
     setLoadData(true);
 
     const activityCollection = collection(database, "activities");
@@ -56,7 +54,14 @@ export function Activities() {
 
     getDocs(queryActivitiesUser)
       .then(response => {
-        const data = response.docs.map(doc => doc.data()) as Activity[];
+        const data = response.docs.map(doc => {
+          const data = doc.data() as { name: string };
+
+          return {
+            id: doc.id,
+            name: data.name,
+          }
+        }) as Activity[];
 
         if (data.length > 0) {
           localStorage.setItem("@lastQuantityActivities", JSON.stringify(data.length));
@@ -66,9 +71,6 @@ export function Activities() {
       })
       .catch(error => console.log(error))
       .finally(() => setLoadData(false));
-   } catch (error) {
-     console.log(error);
-   }
   }, [user]);
 
 
@@ -78,15 +80,14 @@ export function Activities() {
     try {
       setLoadButton(true);
 
-      const newTask: Activity = {
-        id: Math.random(),
-        name: task,
-        userId: user.uid
-      }
+      const response = await addDoc(collection(database, "activities"), 
+        { userId: user.uid, name: task }
+      );
 
-      await addDoc(collection(database, "activities"), newTask);
-
-      setTasks(taks => [...taks, newTask]);
+      setTasks(taks => [...taks, {
+        id: response.id,
+        name: task
+      }]);
 
       setTask("");
     } catch (error) {
@@ -95,7 +96,7 @@ export function Activities() {
       setLoadButton(false);
     }
   }
-  
+
   return (
     <Box
       maxW={340}
@@ -112,7 +113,7 @@ export function Activities() {
             fontWeight={500}
             as="span"
           >
-            {user.displayName ? "Suas listas" : "Por favor"}
+            Suas Listas
           </Text>
           <Text
             fontSize={24}
@@ -121,7 +122,7 @@ export function Activities() {
             as="span"
             display={"block"}
           >
-            {user.displayName ?? "Faça Login"}
+            {user.displayName}
           </Text>
         </Text>
         <Box
@@ -133,7 +134,6 @@ export function Activities() {
           <Image
             _hover={{ filter: "brightness(0.8)" }}
             w="100%"
-            onClick={signIn}
             borderRadius="50%"
             border="2px solid #FFF"
             src={String(user.photoURL)}
@@ -174,7 +174,7 @@ export function Activities() {
           tasks.map(task => (
             <List
               key={task.id}
-              router={`/deliveries/${task.name}`}
+              router={`/deliveries/${task.id}`}
               title={task.name}
             />
           ))

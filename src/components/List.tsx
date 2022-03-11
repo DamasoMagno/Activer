@@ -7,22 +7,22 @@ interface ListProps {
   router: string;
 }
 
-export function List({ title, router }: ListProps){
+export function List({ title, router }: ListProps) {
   return (
-    <Link to={`${router}`}>
-      <Flex 
-        justify="space-between" 
-        align="center"
-        p={4}
-        cursor="pointer"
-        color="#FFF"
-        background="#7474FE" 
-        mt={4}
-        borderRadius={4}
-      >
-        <Text fontSize={20}>{title}</Text>
-        <MdArrowForwardIos color="#FFF" size={20}/>
-      </Flex>
-    </Link>
+    <Flex
+      as={Link}
+      to={router}
+      justify="space-between"
+      align="center"
+      p={4}
+      cursor="pointer"
+      color="#FFF"
+      background="#7474FE"
+      mt={2}
+      borderRadius={4}
+    >
+      <Text fontSize={20}>{title}</Text>
+      <MdArrowForwardIos color="#FFF" size={20} />
+    </Flex>
   );
 }

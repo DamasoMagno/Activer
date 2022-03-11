@@ -1,11 +1,43 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, Text, Flex, Image, Stack } from "@chakra-ui/react";
 import { MdArrowBackIos } from "react-icons/md";
+import { collection, getDocs, getFirestore } from "firebase/firestore";
+import { app } from "../services/firebase";
+import { useParams } from "react-router-dom";
+
+type StudentActivity = {
+  activityId: string;
+  userName: string;
+  attachments: string;
+}
 
 export function Student() {
-  const [ name, setName ] = useState<string>("");
-  const [ called, setCalled ] = useState<number>(0);
-  const [ attachments, setAttachments ] = useState<Array<any>>([]);
+  const database = getFirestore(app);
+  const { id } = useParams();
+
+  const [ student, setStudent ] = useState<StudentActivity>({} as StudentActivity);
+  const [loadTaks, setLoadData] = useState(false);
+
+
+  useEffect(() => {
+    try {
+      setLoadData(true);
+
+      const activityCollection = collection(database, "users_activity");
+
+      getDocs(activityCollection)
+        .then(response => {
+          const data = response.docs
+              .find(doc => doc.id === id)?.data() as StudentActivity;
+
+          setStudent(data);
+        })
+        .catch(error => console.log(error))
+        .finally(() => setLoadData(false));
+    } catch (error) {
+      console.log(error);
+    }
+  }, []);
 
   return (
     <Box 
@@ -27,7 +59,7 @@ export function Student() {
           fontWeight={500} 
           fontSize={24}
         >
-          Damaso Magno
+          { student.userName }
         </Text>
       </Flex>
 
@@ -38,19 +70,18 @@ export function Student() {
         </Box>
 
         <Box>
-          <Text>Número Chamada</Text>
-          <Text>09</Text>
-        </Box>
-
-        <Box>
-          <Text>Anexos</Text>
+          <Text>Anexo</Text>
           <Stack spacing={4}>
             <Flex>
-              <Image/>
+              <Image src={student.attachments}/>
             </Flex>
           </Stack>
         </Box>
       </Box>
     </Box>
   );
+}
+
+function setActivitiesStudent(data: { id: string; userName: any; }[]) {
+  throw new Error("Function not implemented.");
 }

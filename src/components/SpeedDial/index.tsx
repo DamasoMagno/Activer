@@ -1,15 +1,16 @@
-import { Flex } from "@chakra-ui/react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
+import { Flex } from "@chakra-ui/react";
 
 import { MdAdd, MdClose, MdDelete } from "react-icons/md";
 import { FaFilePdf } from "react-icons/fa";
-import { SpeedButton } from "./button";
+import { SpeedButton } from "./buttons";
 
 export function SpeedDial() {
   const navigate = useNavigate();
+  const { id } = useParams();
 
-  const [speedActive, setSpeedActive] = useState(false);
+  const [speedDialActive, setSpeedDialActive] = useState(false);
 
   return (
     <Flex
@@ -20,17 +21,12 @@ export function SpeedDial() {
       bottom={0}
       right={0}
     >
-      {speedActive && (
+      {speedDialActive && (
         <>
           <SpeedButton
-            onClick={() => navigate(`/deliver/1`)}
+            onClick={() => navigate(`/deliver/${id}`)}
             icon={MdAdd}
             label="Realizar atividade"
-          />
-          <SpeedButton
-            onClick={() => navigate(`/deliver/1`)}
-            icon={FaFilePdf}
-            label="Gerar PDF"
           />
           <SpeedButton
             onClick={() => navigate(`/deliver/1`)}
@@ -40,15 +36,16 @@ export function SpeedDial() {
         </>
       )}
       <Flex
+        className="teste"
         as="button"
-        onClick={() => setSpeedActive(!speedActive)}
+        onClick={() => setSpeedDialActive(!speedDialActive)}
         w="50px" h="50px"
         justify="center"
         align="center"
         borderRadius="50%"
         bg="#7474FE"
       >
-        {speedActive ?
+        {speedDialActive ?
           <MdClose color="#FFF" size={"50%"} /> :
           <MdAdd color="#FFF" size={32} />
         }
