@@ -33,6 +33,8 @@ export function Tasks() {
   useEffect(() => {
     setLoadTaks(true);
 
+    if (!user.uid) return;
+
     const queryTasksUserLogged = query(
       collection(database, "tasks"),
       where("userId", "==", user.uid)
@@ -57,6 +59,7 @@ export function Tasks() {
       .finally(() => setLoadTaks(false));
   }, [user]);
 
+
   async function handleSignOut() {
     try {
       await signOut(auth);
@@ -65,7 +68,7 @@ export function Tasks() {
       console.log(error)
     }
   }
-  
+
   async function handleAddTask() {
     if (!task) return;
 
@@ -92,7 +95,7 @@ export function Tasks() {
           duration: 2500,
           position: "top",
           variant: "subtle",
-          isClosable: true,
+          isClosable: true
         })
       };
 
@@ -109,7 +112,7 @@ export function Tasks() {
       setTask("");
     } catch (error) {
       console.log(error);
-    } 
+    }
 
     setLoadButton(false);
   }
