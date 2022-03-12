@@ -1,5 +1,5 @@
-import { useEffect, useState, createContext, ReactNode, useContext } from "react";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "firebase/auth";
+import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { app } from "../services/firebase";
 
 type User = {
@@ -10,7 +10,7 @@ type User = {
 
 type AuthContextProps = {
   user: User;
-  signIn: () => void;
+  signIn: () => Promise<void>;
 }
 
 type AuthContextProviderProps = {
@@ -28,6 +28,7 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) {
     onAuthStateChanged(auth, (newUser) => {
       if (!newUser) {
         console.log("Usuario não carregado");
+        return;
       }
       
       setUser({
@@ -41,17 +42,12 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) {
   async function signIn() {
     const provider = new GoogleAuthProvider();
 
-    signInWithPopup(auth, provider)
-      .then(response => {
-        const { user } = response;
-
-        setUser({
-          displayName: user.displayName,
-          photoURL: user.photoURL,
-          uid: user.uid
-        });
-      })
-      .catch(error => console.log(error))
+    try {
+      const response = await signInWithPopup(auth, provider);
+      setUser({...response.user});
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   return (

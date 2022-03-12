@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
-import { Box, Text, Flex, Image, Stack } from "@chakra-ui/react";
-import { MdArrowBackIos } from "react-icons/md";
+import { Box, Flex, Image, Stack, Text } from "@chakra-ui/react";
 import { collection, getDocs, getFirestore } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import { MdArrowBackIos } from "react-icons/md";
+import { Link, useParams } from "react-router-dom";
 import { app } from "../services/firebase";
-import { useParams } from "react-router-dom";
 
 type StudentActivity = {
   activityId: string;
@@ -39,6 +39,8 @@ export function Student() {
     }
   }, []);
 
+  console.log(student);
+
   return (
     <Box 
       w={340} 
@@ -49,17 +51,19 @@ export function Student() {
         as="header" 
         alignItems={"center"}
       >
-        <MdArrowBackIos 
-          size={20} 
-          color="#7474FE"
-        />
+        <Link to={"/"}>
+          <MdArrowBackIos 
+            size={20} 
+            color="#7474FE"
+          />
+        </Link>
         <Text 
           flex={"1"} 
           textAlign="center" 
           fontWeight={500} 
           fontSize={24}
         >
-          { student.userName }
+          { student?.userName }
         </Text>
       </Flex>
 
@@ -73,7 +77,7 @@ export function Student() {
           <Text>Anexo</Text>
           <Stack spacing={4}>
             <Flex>
-              <Image src={student.attachments}/>
+              <Image src={student?.attachments}/>
             </Flex>
           </Stack>
         </Box>

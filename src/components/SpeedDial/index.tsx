@@ -1,10 +1,9 @@
-import { useNavigate, useParams } from "react-router-dom";
-import { useState } from "react";
 import { Flex } from "@chakra-ui/react";
-
+import { useState } from "react";
 import { MdAdd, MdClose, MdDelete } from "react-icons/md";
-import { FaFilePdf } from "react-icons/fa";
+import { useNavigate, useParams } from "react-router-dom";
 import { SpeedButton } from "./buttons";
+
 
 export function SpeedDial() {
   const navigate = useNavigate();
@@ -17,9 +16,9 @@ export function SpeedDial() {
       justify="center"
       align="center"
       direction="column"
-      position="absolute"
-      bottom={0}
-      right={0}
+      position="fixed"
+      bottom={5}
+      right={5}
     >
       {speedDialActive && (
         <>

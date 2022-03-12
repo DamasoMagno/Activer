@@ -1,12 +1,11 @@
-import { Box, Button, Flex, Skeleton, Text } from "@chakra-ui/react";
-import { collection, getDocs, getFirestore, query, where } from "firebase/firestore";
+import { Box, Button, Flex, Text } from "@chakra-ui/react";
+import { collection, deleteDoc, doc, getDocs, getFirestore, query, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { MdArrowBackIos } from "react-icons/md";
-import { Link, useParams } from "react-router-dom";
-
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { List } from "../components/List";
-import { SpeedDial } from "../components/SpeedDial";
 import { app } from "../services/firebase";
+
 
 export type StudentActivity = {
   id: string;
@@ -16,38 +15,20 @@ export type StudentActivity = {
 export function Deliveries() {
   const database = getFirestore(app);
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const [loadTaks, setLoadData] = useState(false);
 
   const [activitiesStudent, setActivitiesStudent] = useState<StudentActivity[]>([]);
 
-  function showLoaderWhileDataNotLoaded() {
-    const lastQuantityOfData = [];
-    const quantityData = localStorage.getItem("@lastQuantityActivities");
-
-    for (let i = 0; i < Number(quantityData); i++) {
-      lastQuantityOfData.push(i);
-    }
-
-    return lastQuantityOfData.map(size =>
-    (
-      <Skeleton
-        h="40px"
-        key={size}
-        startColor="rgba(116, 116, 254, .5)"
-        endColor="rgba(116, 116, 254, 1)"
-      />
-    )
-    );
-  }
-
   useEffect(() => {
     try {
       setLoadData(true);
 
-      const activityCollection = collection(database, "users_activity");
-
-      const queryActivitiesUser = query(activityCollection, where("activityId", "==", id));
+      const queryActivitiesUser = query(
+        collection(database, "tasksDelivered"), 
+        where("activityId", "==", id)
+      );
 
       getDocs(queryActivitiesUser)
         .then(response => {
@@ -72,6 +53,10 @@ export function Deliveries() {
       console.log(error);
     }
   }, []);
+
+  async function finishCollection(){
+    await deleteDoc(doc(database, "activities", `${id}`))
+  }
 
   return (
     <Box
@@ -111,9 +96,22 @@ export function Deliveries() {
         </Text>
       </Flex>
 
-      <Flex>
-        <Button>
-          Teste
+      <Flex gap=".25rem" my={4}>
+        <Button 
+          w="100%" 
+          bg="transparent" 
+          border="1px solid #7474FE"
+          onClick={() => navigate(`/deliver/${id}`)}
+        >
+          <Text color="#7474FE">Enviar Atividade</Text>
+        </Button>
+        <Button 
+          w="100%" 
+          bg="transparent" 
+          border="1px solid #7474FE"
+          onClick={finishCollection}
+        >
+          <Text color="#7474FE">Concluir Lista</Text>
         </Button>
       </Flex>
 

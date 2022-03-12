@@ -1,6 +1,6 @@
 import { Flex, Text } from "@chakra-ui/layout";
-import { Link } from "react-router-dom";
 import { MdArrowForwardIos } from "react-icons/md";
+import { Link } from "react-router-dom";
 
 interface ListProps {
   title: string;

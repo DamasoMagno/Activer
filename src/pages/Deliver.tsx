@@ -1,19 +1,18 @@
-import { useAuth } from "../contexts/AuthContext";
-import { useParams } from "react-router-dom";
-import { Link } from "react-router-dom";
-import { addDoc, collection, getFirestore, doc } from "firebase/firestore";
-import { FormEvent, useEffect, useState } from "react";
-import { Text, Flex, Button, Input, Box, Stack, Center, Image } from "@chakra-ui/react";
-import { FiShare2 } from "react-icons/fi";
+import { Box, Button, Center, Flex, Image, Input, Stack, Text } from "@chakra-ui/react";
+import { addDoc, collection, getDocs, getFirestore, query, where } from "firebase/firestore";
 import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
+import { FormEvent, useEffect, useState } from "react";
+import { FiShare2 } from "react-icons/fi";
 import { MdArrowBackIos, MdDone } from "react-icons/md";
-
+import { Link, useParams } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import { app } from "../services/firebase";
 
 
 export function Deliver() {
-  const { id } = useParams();
-  
+  const params = useParams<string>();
+  const id = params.id as string;
+
   const database = getFirestore(app);
   const storage = getStorage(app);
 
@@ -22,6 +21,7 @@ export function Deliver() {
   const [attachments, setAttachments] = useState<File>({} as File);
   const [previewAttachments, setPreviewAttachments] = useState<string>("");
   const [activityIsShared, setActivityIsShared] = useState(false);
+  const [activitySendLoading, setActivityLoading] = useState(false);
 
   async function copyUrl() {
     const url = location.href;
@@ -32,7 +32,7 @@ export function Deliver() {
 
   useEffect(() => {
     try {
-      if (!attachments.name) return
+      if (!attachments.name) return;
 
       const binaryData = [];
       binaryData.push(attachments as BlobPart);
@@ -49,14 +49,30 @@ export function Deliver() {
   async function handleSubmitName(event: FormEvent) {
     event.preventDefault();
 
-    const storageRef = ref(storage, `attachments/${attachments.name}`);
-
     try {
+      setActivityLoading(true);
+
+      const activityCollection = collection(database, "tasksDelivered");
+
+      const queryActivitiesUser = query(activityCollection, where("activityId", "==", id));
+
+      const userAlreadyHas = (await getDocs(queryActivitiesUser))
+          .docs.map(doc => doc.data())
+          .some( data => data.userName === user.displayName );
+
+      if (userAlreadyHas){
+        alert("Você já enviou essa atividade");
+        setActivityLoading(false);
+        return;
+      };
+
+      const storageRef = ref(storage, `attachments/${attachments.name}`);
+
       await uploadBytes(storageRef, attachments);
 
       const imageURL = await getDownloadURL(ref(storage, `attachments/${attachments.name}`));
 
-      await addDoc(collection(database, "users_activity"), {
+      await addDoc(collection(database, "tasksDelivered"), {
         userName: user.displayName,
         attachments: imageURL,
         activityId: id
@@ -66,6 +82,8 @@ export function Deliver() {
     } catch (error) {
       console.log(error);
     }
+
+    setActivityLoading(false);
   }
 
   return (
@@ -191,6 +209,7 @@ export function Deliver() {
             bg="#7474FE"
             p={8}
             type="submit"
+            isLoading={activitySendLoading}
           >
             <Text color="#FFF">ENVIAR</Text>
           </Button>
