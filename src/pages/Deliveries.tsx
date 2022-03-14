@@ -56,7 +56,14 @@ export function Deliveries() {
   }, []);
 
   async function copyUrl() {
-    await navigator.clipboard.writeText(String(id));
+    // const urlDeliverTask = ;
+    const shareData = {
+      title: 'Testando',
+      text: 'Aprenda desenvolvimento web no MDN!',
+      url: 'https://developer.mozilla.org',
+    }
+
+    await navigator.share(shareData);
   }
 
   async function removeTask(){

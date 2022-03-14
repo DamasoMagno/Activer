@@ -2,8 +2,7 @@ import { Box, Button, Center, Flex, Image, Input, Stack, Text, useToast } from "
 import { addDoc, collection, getDocs, getFirestore, query, where } from "firebase/firestore";
 import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import { FormEvent, useEffect, useState } from "react";
-import { FiShare2 } from "react-icons/fi";
-import { MdArrowBackIos, MdDone } from "react-icons/md";
+import { MdArrowBackIos } from "react-icons/md";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { app } from "../services/firebase";
@@ -22,7 +21,6 @@ export function Deliver() {
 
   const [attachments, setAttachments] = useState<File>({} as File);
   const [previewAttachments, setPreviewAttachments] = useState<string>("");
-  const [activityIsShared, setActivityIsShared] = useState(false);
   const [activitySendLoading, setActivityLoading] = useState(false);
 
   useEffect(() => {
@@ -103,13 +101,13 @@ export function Deliver() {
 
   return (
     <Flex
-      maxW={350}
+      maxW={720}
+      w="90%"
       mx="auto"
-      py={8}
       as="form"
       onSubmit={handleSubmitName}
       direction="column"
-      justify="space-between"
+      justify="space-around"
       h="100vh"
     >
       <Flex align={"center"}>

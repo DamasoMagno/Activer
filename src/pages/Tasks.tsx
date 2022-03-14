@@ -143,7 +143,7 @@ export function Tasks() {
         <Flex
           justify="space-between"
           align="center"
-          maxW={340}
+          maxW="90%"
           mx="auto"
         >
           <Flex align="center" gap=".25rem">
@@ -166,7 +166,8 @@ export function Tasks() {
       <Flex
         justify="space-between"
         mt={-5}
-        maxW={340}
+        maxW={720}
+        w="90%"
         mx="auto"
       >
         <Input
@@ -192,14 +193,10 @@ export function Tasks() {
 
       <Box
         mt={8}
-        maxW={340}
+        maxW={720}
+        w="90%"
         mx="auto"
       >
-        <Flex gap=".5rem">
-          <Input placeholder="Id Atividade" onChange={e => setTaskId(e.target.value)} />
-          <Button onClick={() => navigate("/deliver/" + taskId)}>Ir</Button>
-        </Flex>
-
         <Select
           onChange={setOrderData}
           mt={8}
