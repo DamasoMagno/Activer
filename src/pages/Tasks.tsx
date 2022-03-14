@@ -1,46 +1,52 @@
-import { Box, Button, Flex, Input, Text, useToast } from "@chakra-ui/react";
+import { ChangeEvent, useEffect, useState } from "react";
+import { Box, Button, Flex, Input, Text, useToast, Spinner, Center, Stack, Select, Image, Wrap } from "@chakra-ui/react";
 import { getAuth, signOut } from "firebase/auth";
-import { addDoc, collection, getDocs, getFirestore, query, where } from "firebase/firestore";
-import { useEffect, useState } from "react";
+import { addDoc, collection, getDocs, getFirestore, orderBy, OrderByDirection, query, where } from "firebase/firestore";
 import { MdAdd, MdLogout } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
-import { List } from "../components/List";
 import { useAuth } from "../contexts/AuthContext";
 import { app } from "../services/firebase";
 import { SkeletonEffect } from "../utils/skeleton";
 
+import { List } from "../components/List";
 
 type Task = {
   id: string;
   name: string;
 }
 
+type Order = {
+  field: string;
+  order: OrderByDirection;
+}
+
 export function Tasks() {
   const database = getFirestore(app);
   const auth = getAuth(app);
+
   const toast = useToast();
-
   const navigate = useNavigate();
-
   const { user } = useAuth();
 
   const [task, setTask] = useState<string>("");
   const [tasks, setTasks] = useState<Task[]>([]);
-
   const [loadButton, setLoadButton] = useState(false);
   const [loadTaks, setLoadTaks] = useState(false);
+  const [order, setOrder] = useState<Order>({ field: "name", order: "asc" });
+  const [taskId, setTaskId] = useState("");
 
   useEffect(() => {
     setLoadTaks(true);
 
     if (!user.uid) return;
 
-    const queryTasksUserLogged = query(
+    const queryTasksByUserLogged = query(
       collection(database, "tasks"),
-      where("userId", "==", user.uid)
+      where("userId", "==", user.uid),
+      orderBy(order.field, order.order)
     );
 
-    getDocs(queryTasksUserLogged)
+    getDocs(queryTasksByUserLogged)
       .then(response => {
         const tasks = response.docs.map(doc => {
           return {
@@ -50,14 +56,16 @@ export function Tasks() {
         }) as Task[];
 
         if (tasks.length > 0) {
-          localStorage.setItem("@lastQuantityActivities", JSON.stringify(tasks.length));
+          localStorage.setItem("@lastTasksStoraged", JSON.stringify(tasks.length));
+        } else {
+          localStorage.setItem("@lastTasksStoraged", JSON.stringify(0));
         }
 
         setTasks(tasks);
       })
       .catch(error => console.log(error))
       .finally(() => setLoadTaks(false));
-  }, [user]);
+  }, [user, order]);
 
 
   async function handleSignOut() {
@@ -69,6 +77,14 @@ export function Tasks() {
     }
   }
 
+  function setOrderData(e: ChangeEvent<HTMLSelectElement>) {
+    if (e.target.value === "Ordem Alfabetica") {
+      setOrder({ field: "name", order: "asc" });
+    } else {
+      setOrder({ field: "created_at", order: "desc" });
+    }
+  }
+
   async function handleAddTask() {
     if (!task) return;
 
@@ -77,7 +93,7 @@ export function Tasks() {
 
       const queryTaskByName = query(
         collection(database, "tasks"),
-        where("name", "==", task)
+        where("name", "==", task),
       );
 
       const response = await getDocs(queryTaskByName);
@@ -101,7 +117,7 @@ export function Tasks() {
 
       const newTask = await addDoc(
         collection(database, "tasks"),
-        { userId: user.uid, name: task }
+        { userId: user.uid, name: task, created_at: Date.now() }
       );
 
       setTasks(taks => [...taks, {
@@ -117,50 +133,41 @@ export function Tasks() {
     setLoadButton(false);
   }
 
-
-  return (
-    <Box
-      maxW={340}
-      my={4}
-      mx="auto"
-    >
-      <Flex
-        justify="space-between"
-        align="center"
+  return user.displayName ? (
+    <>
+      <Box
+        as="header"
+        bg="primary"
+        p={"12px 0 50px"}
       >
-        <Text>
-          <Text
-            fontSize={20}
-            fontWeight={500}
-            as="span"
-          >
-            Suas Tarefas
-          </Text>
-          <Text
-            fontSize={24}
-            color="#7474FE"
-            fontWeight="bold"
-            as="span"
-            display={"block"}
-          >
-            {user.displayName}
-          </Text>
-        </Text>
         <Flex
-          as={Button}
-          bg="#F9F9F9"
-          p={2}
-          onClick={handleSignOut}
-          borderRadius="50%"
-          justify="center"
+          justify="space-between"
           align="center"
+          maxW={340}
+          mx="auto"
         >
-          <MdLogout color="#B4B4B4" size={32} />
+          <Flex align="center" gap=".25rem">
+            <Image
+              src={String(user.photoURL)}
+              w="40px"
+              h="40px"
+              borderRadius="50%"
+              p={.4}
+              border="1px solid white"
+            />
+            <Text fontSize="xl" color="#FFF">
+              {user.displayName}
+            </Text>
+          </Flex>
+          <MdLogout color="#FFF" size={24} onClick={handleSignOut} />
         </Flex>
-      </Flex>
+      </Box>
+
       <Flex
         justify="space-between"
-        mt={8}
+        mt={-5}
+        maxW={340}
+        mx="auto"
       >
         <Input
           placeholder="Nova Tarefa"
@@ -168,23 +175,44 @@ export function Tasks() {
           value={task}
           fontSize={18}
           variant="outline"
+          bg="#FFF"
         />
         <Button
-          bg="#7474FE"
+          bg="white"
           onClick={handleAddTask}
           ml={2}
           isLoading={loadButton}
         >
           <MdAdd
             size={32}
-            color="#FFF"
+            color="#7474FE"
           />
         </Button>
       </Flex>
 
-      <Box mt={12}>
+      <Box
+        mt={8}
+        maxW={340}
+        mx="auto"
+      >
+        <Flex gap=".5rem">
+          <Input placeholder="Id Atividade" onChange={e => setTaskId(e.target.value)} />
+          <Button onClick={() => navigate("/deliver/" + taskId)}>Ir</Button>
+        </Flex>
+
+        <Select
+          onChange={setOrderData}
+          mt={8}
+          mb={4}
+        >
+          <option value="Ordem Alfabética" defaultChecked>Ordem Alfabética</option>
+          <option value="Data Criação">Data Criação</option>
+        </Select>
+
         {loadTaks ? (
-          SkeletonEffect()
+          SkeletonEffect({
+            localStorageName: "lastTasksStoraged"
+          })
         ) :
           tasks.map(task => (
             <List
@@ -192,9 +220,37 @@ export function Tasks() {
               router={`/deliveries/${task.id}`}
               title={task.name}
             />
-          )).reverse()
+          ))
         }
       </Box>
-    </Box>
+    </>
+  ) : (
+    <Center
+      h="100vh"
+      bg="primary"
+      maxW="100%"
+      mx="auto"
+    >
+      <Flex
+        as={Stack}
+        spacing={4}
+        align="center"
+        direction="column"
+      >
+        <Spinner
+          thickness='5px'
+          speed='1s'
+          emptyColor='gray.600'
+          color='white'
+          size='xl'
+        />
+        <Text
+          color="#FFF"
+          fontSize="1.5rem"
+        >
+          Carregando
+        </Text>
+      </Flex>
+    </Center>
   );
 }

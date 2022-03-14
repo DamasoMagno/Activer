@@ -1,13 +1,17 @@
 import { Skeleton } from "@chakra-ui/react";
 
-export function SkeletonEffect() {
-  const lastQuantityOfData = [];
-  const quantityData = localStorage.getItem("@lastQuantityActivities");
+type SkeletonEffectProps = {
+  localStorageName: string;
+}
 
+export function SkeletonEffect({ localStorageName }: SkeletonEffectProps) {
+  const lastQuantityOfData = [];
+  const quantityData = localStorage.getItem(`@${localStorageName}`);
+  
   for (let i = 0; i < Number(quantityData); i++) {
     lastQuantityOfData.push(i);
   }
-
+  
   return lastQuantityOfData.map(size =>
   (
     <Skeleton

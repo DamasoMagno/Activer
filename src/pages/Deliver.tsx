@@ -1,10 +1,10 @@
-import { Box, Button, Center, Flex, Image, Input, Stack, Text } from "@chakra-ui/react";
+import { Box, Button, Center, Flex, Image, Input, Stack, Text, useToast } from "@chakra-ui/react";
 import { addDoc, collection, getDocs, getFirestore, query, where } from "firebase/firestore";
 import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import { FormEvent, useEffect, useState } from "react";
 import { FiShare2 } from "react-icons/fi";
 import { MdArrowBackIos, MdDone } from "react-icons/md";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { app } from "../services/firebase";
 
@@ -12,6 +12,8 @@ import { app } from "../services/firebase";
 export function Deliver() {
   const params = useParams<string>();
   const id = params.id as string;
+  const toast = useToast();
+  const navigate = useNavigate();
 
   const database = getFirestore(app);
   const storage = getStorage(app);
@@ -23,12 +25,36 @@ export function Deliver() {
   const [activityIsShared, setActivityIsShared] = useState(false);
   const [activitySendLoading, setActivityLoading] = useState(false);
 
-  async function copyUrl() {
-    const url = location.href;
-    await navigator.clipboard.writeText(url);
+  useEffect(() => {
+    const queryActivitiesUser = query(
+      collection(database, "tasksDelivered"),
+      where("activityId", "==", id)
+    );
 
-    setActivityIsShared(true);
-  }
+    getDocs(queryActivitiesUser)
+      .then(response => {
+
+        const userAlreadyHas = response.docs
+          .map(doc => doc.data())
+          .some(data => data.userName === user.displayName);
+
+        if (userAlreadyHas) {
+          setActivityLoading(false);
+
+          toast({
+            title: "Você já enviou essa tarefa",
+            status: "info",
+            duration: 500,
+            position: "top",
+            variant: "subtle",
+            isClosable: true
+          });
+
+          return setTimeout(() => navigate(`/`), 500);
+        };
+      })
+  }, []);
+
 
   useEffect(() => {
     try {
@@ -52,20 +78,6 @@ export function Deliver() {
     try {
       setActivityLoading(true);
 
-      const activityCollection = collection(database, "tasksDelivered");
-
-      const queryActivitiesUser = query(activityCollection, where("activityId", "==", id));
-
-      const userAlreadyHas = (await getDocs(queryActivitiesUser))
-          .docs.map(doc => doc.data())
-          .some( data => data.userName === user.displayName );
-
-      if (userAlreadyHas){
-        alert("Você já enviou essa atividade");
-        setActivityLoading(false);
-        return;
-      };
-
       const storageRef = ref(storage, `attachments/${attachments.name}`);
 
       await uploadBytes(storageRef, attachments);
@@ -75,16 +87,19 @@ export function Deliver() {
       await addDoc(collection(database, "tasksDelivered"), {
         userName: user.displayName,
         attachments: imageURL,
-        activityId: id
+        activityId: id,
+        created_at: Date.now()
       });
 
-      console.log("Arquivo enviado com sucesso");
+      navigate("/delivered/success");
     } catch (error) {
       console.log(error);
+      navigate("/deliver/error");
     }
 
     setActivityLoading(false);
   }
+
 
   return (
     <Flex
@@ -164,56 +179,14 @@ export function Deliver() {
       </Stack>
 
       <Flex direction={"column"}>
-        <Stack spacing={2}>
-          {!activityIsShared ? (
-            <Flex
-              bg="transparent"
-              border={"1px dashed #7474FE"}
-              p={4}
-              as="button"
-              onClick={copyUrl}
-              borderRadius={4}
-              justify="center"
-              cursor="pointer"
-              align="center"
-              borderColor="#7474FE"
-            >
-              <Text
-                color="#7474FE"
-                mr={2}
-              >
-                Compartilhar
-              </Text>
-              <FiShare2 color="#7474FE" />
-            </Flex>
-          ) : (
-            <Flex
-              bg="transparent"
-              border={"1px dashed #7474FE"}
-              p={4}
-              borderRadius={4}
-              justify="center"
-              align="center"
-              borderColor="#7474FE"
-            >
-              <Text
-                color="#7474FE"
-                mr={2}
-              >
-                Link Copiado
-              </Text>
-              <MdDone color="#7474FE" />
-            </Flex>
-          )}
-          <Button
-            bg="#7474FE"
-            p={8}
-            type="submit"
-            isLoading={activitySendLoading}
-          >
-            <Text color="#FFF">ENVIAR</Text>
-          </Button>
-        </Stack>
+        <Button
+          bg="#7474FE"
+          p={8}
+          type="submit"
+          isLoading={activitySendLoading}
+        >
+          <Text color="#FFF">ENVIAR</Text>
+        </Button>
       </Flex>
     </Flex>
   )

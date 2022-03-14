@@ -1,5 +1,6 @@
 import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "firebase/auth";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import { useNavigate, useNavigationType } from "react-router-dom";
 import { app } from "../services/firebase";
 
 type User = {
@@ -21,20 +22,20 @@ export const AuthContext = createContext({} as AuthContextProps);
 
 export function AuthContextProvider({ children }: AuthContextProviderProps) {
   const auth = getAuth(app);
+  const navigate = useNavigate();
 
   const [user, setUser] = useState<User>({} as User);
 
   useEffect(() => {
-    onAuthStateChanged(auth, (newUser) => {
-      if (!newUser) {
-        console.log("Usuario não carregado");
-        return;
+    onAuthStateChanged(auth, userLogged => {
+      if (!userLogged) {
+        return navigate("/signIn");
       }
       
       setUser({
-        displayName: newUser?.displayName ?? null,
-        photoURL: newUser?.photoURL ?? null,
-        uid: newUser?.uid ?? null
+        displayName: userLogged?.displayName ?? null,
+        photoURL: userLogged?.photoURL ?? null,
+        uid: userLogged?.uid ?? null
       });
     });
   }, []);
