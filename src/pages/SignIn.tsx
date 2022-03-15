@@ -1,5 +1,6 @@
 import { Box, Button, Flex, Heading, Text } from "@chakra-ui/react";
 import { MdLogin } from "react-icons/md";
+import { FaTasks } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -14,40 +15,49 @@ export function SignIn() {
   }
 
   return (
-    <Flex
-      maxW={340}
-      mx="auto"
-      direction="column"
-      h="70vh"
-      justify="space-between"
-      mt="25vh"
+    <Box
+      bg="primary"
+      h="100vh"
+      pt="25vh"
     >
-      <Box>
-        <Heading
-          as="h1"
-          color="primary"
-          fontSize="3rem"
-        >
-          Activer
-        </Heading>
-        <Text
-          maxW={250}
-          textAlign="left"
-          fontSize={28}
-          mt="4rem"
-          color="primary"
-        >
-          Aqui você cria uma tarefa
-          compartilha, sucesso amigão.
-        </Text>
-      </Box>
-      <Flex align="center">
+      <Flex
+        maxW={720}
+        mx="auto"
+        w="90%"
+        direction="column"
+        position="relative"
+        h="70vh"
+        justify="space-between"
+      >
+        <Box>
+          <Flex align="baseline">
+            <FaTasks color="#FFF" size={32} />
+            <Heading
+              as="h1"
+              color="#FFF"
+              fontSize="3rem"
+              ml={5}
+            >
+              Activer
+            </Heading>
+          </Flex>
+          <Text
+            maxW={225}
+            textAlign="left"
+            fontSize={28}
+            mt="4rem"
+            color="#FFF"
+          >
+            Seu gerenciador online
+            de tarefas e eventos.
+          </Text>
+        </Box>
+
         <Button
           onClick={handleSignUser}
+          bg="#FFF"
+          color="primary"
           py={5}
-          bg="primary"
-          color="#FFF"
-          flex={1}
         >
           <Text
             flex={1}
@@ -55,9 +65,20 @@ export function SignIn() {
           >
             Entrar
           </Text>
-          <MdLogin color="#FFF" size={20} />
+          <MdLogin color="#7474FE" size={20} />
         </Button>
+
+        <FaTasks
+          size={125}
+          color="rgba(255, 255, 255, .1)"
+          style={{
+            position: "absolute",
+            bottom: "100%",
+            left: 0,
+            transform: "translate(-10%, 80%)",
+          }}
+        />
       </Flex>
-    </Flex>
+    </Box>
   );
 }

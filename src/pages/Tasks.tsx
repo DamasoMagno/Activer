@@ -136,17 +136,21 @@ export function Tasks() {
   return user.displayName ? (
     <>
       <Box
-        as="header"
         bg="primary"
-        p={"12px 0 50px"}
+        h="14vh"
       >
         <Flex
           justify="space-between"
           align="center"
-          maxW="90%"
+          maxW={720}
+          py={4}
+          w="90%"
           mx="auto"
         >
-          <Flex align="center" gap=".25rem">
+          <Flex 
+            align="center" 
+            gap=".25rem"
+          >
             <Image
               src={String(user.photoURL)}
               w="40px"
@@ -179,14 +183,14 @@ export function Tasks() {
           bg="#FFF"
         />
         <Button
-          bg="white"
+          bg="primary"
           onClick={handleAddTask}
           ml={2}
           isLoading={loadButton}
         >
           <MdAdd
             size={32}
-            color="#7474FE"
+            color="white"
           />
         </Button>
       </Flex>
@@ -201,6 +205,7 @@ export function Tasks() {
           onChange={setOrderData}
           mt={8}
           mb={4}
+          maxW={185}
         >
           <option value="Ordem Alfabética" defaultChecked>Ordem Alfabética</option>
           <option value="Data Criação">Data Criação</option>
@@ -214,7 +219,7 @@ export function Tasks() {
           tasks.map(task => (
             <List
               key={task.id}
-              router={`/deliveries/${task.id}`}
+              router={`/deliveries/${task.id}?taskName=${task.name}`}
               title={task.name}
             />
           ))
