@@ -184,7 +184,7 @@ export function Tasks() {
           bg="#FFF"
         />
         <Button
-          bg="primary"
+          bg="#7455FE"
           onClick={handleAddTask}
           ml={2}
           isLoading={loadButton}
