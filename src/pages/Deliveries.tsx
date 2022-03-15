@@ -1,12 +1,13 @@
-import { Box, Button, Flex, FormControl, Input, Menu, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, FormControl, Input, Text } from "@chakra-ui/react";
 import { collection, getDocs, getFirestore, orderBy, query, where } from "firebase/firestore";
 import { ChangeEvent, useEffect, useState } from "react";
-import { FiUser } from "react-icons/fi";
+import { FiUser, FiUpload } from "react-icons/fi";
 import { MdArrowBackIos, MdDone, MdSearch, MdShare } from "react-icons/md";
 import { Link, useLocation, useParams } from "react-router-dom";
-import { List } from "../components/List";
 import { app } from "../services/firebase";
 import { SkeletonEffect } from "../utils/skeleton";
+
+import { List } from "../components/List";
 
 export type StudentActivity = {
   id: string;
@@ -131,7 +132,7 @@ export function Deliveries() {
               <MdShare color="rgba(255, 255, 255, .85)" size={20} />
             </Flex>
             <Link to={`/deliver/${id}`}>
-              <MdDone color="rgba(255, 255, 255, .85)" size={20} />
+              <FiUpload color="rgba(255, 255, 255, .85)" size={20} />
             </Link>
           </Flex>
         </Flex>
@@ -176,7 +177,8 @@ export function Deliveries() {
             borderRadius={8}
             p={"5px 20px"}
           >
-            <Text color="#FFF">Concluir Lista</Text>
+            <Text color="#FFF" mr={2}>Concluir Lista</Text>
+            <MdDone color="#FFF"/>
           </Button>}
 
         <Box my={2}>

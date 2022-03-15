@@ -2,14 +2,13 @@ import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPane
 import { collection, getDocs, getFirestore } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { MdArrowBackIos } from "react-icons/md";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { app } from "../services/firebase";
 
 type StudentActivity = {
-  activityId: string;
   userName: string;
   attachments: string;
-  created_at: Date;
+  created_at: string;
 }
 
 export function Student() {
@@ -27,7 +26,23 @@ export function Student() {
       getDocs(activityCollection)
         .then(response => {
           const data = response.docs
-            .find(doc => doc.id === id)?.data() as StudentActivity;
+            .map(doc => {
+              const convertedDate = new Date(doc.data().created_at)
+
+              return {
+                id: doc.id,
+                userName: doc.data().userName,
+                created_at: 
+                  `${convertedDate.getDate()}/
+                  ${convertedDate.getMonth().toString().padStart(2, "0")}/
+                  ${convertedDate.getFullYear()}
+                `,
+                attachments: doc.data().attachments
+              };
+            })
+            .find(doc => doc.id === id) as StudentActivity;
+
+
 
           setStudent(data);
         })
@@ -57,7 +72,7 @@ export function Student() {
 
       <Stack
         spacing={4}
-        mt={-8}
+        mt={-5}
         w="90%"
         maxW={720}
         mx="auto"

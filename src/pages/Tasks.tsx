@@ -3,6 +3,7 @@ import { Box, Button, Flex, Input, Text, useToast, Spinner, Center, Stack, Selec
 import { getAuth, signOut } from "firebase/auth";
 import { addDoc, collection, getDocs, getFirestore, orderBy, OrderByDirection, query, where } from "firebase/firestore";
 import { MdAdd, MdLogout } from "react-icons/md";
+import { BiMenuAltLeft } from "react-icons/bi";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { app } from "../services/firebase";
@@ -195,17 +196,23 @@ export function Tasks() {
         </Button>
       </Flex>
 
-      <Box
+      <Flex
         mt={8}
+        direction="column"
         maxW={720}
         w="90%"
         mx="auto"
       >
         <Select
           onChange={setOrderData}
+          variant="unstyled"
+          alignSelf="end"
           mt={8}
+          icon={<BiMenuAltLeft/>}
           mb={4}
-          maxW={185}
+          maxW={180}
+          textAlign="right"
+          color="rgba(0, 0, 0, .5)"
         >
           <option value="Ordem Alfabética" defaultChecked>Ordem Alfabética</option>
           <option value="Data Criação">Data Criação</option>
@@ -224,7 +231,7 @@ export function Tasks() {
             />
           ))
         }
-      </Box>
+      </Flex>
     </>
   ) : (
     <Center
