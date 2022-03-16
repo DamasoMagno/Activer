@@ -1,9 +1,10 @@
-import { Box, Button, Flex, FormControl, Input, Text } from "@chakra-ui/react";
-import { collection, getDocs, getFirestore, orderBy, query, where } from "firebase/firestore";
 import { ChangeEvent, useEffect, useState } from "react";
+import { Box, Button, Flex, FormControl, Input, Text } from "@chakra-ui/react";
+import { collection, deleteDoc, doc, getDocs, getFirestore, orderBy, query, where } from "firebase/firestore";
 import { FiUser, FiUpload } from "react-icons/fi";
 import { MdArrowBackIos, MdDone, MdSearch, MdShare } from "react-icons/md";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+
 import { app } from "../services/firebase";
 import { SkeletonEffect } from "../utils/skeleton";
 
@@ -19,8 +20,10 @@ export function Deliveries() {
 
   const { id } = useParams();
   const { search } = useLocation();
+  const navigate = useNavigate();
 
   const [activitiesStudent, setActivitiesStudent] = useState<StudentActivity[]>([]);
+  const [ t, setId ] = useState([]);
 
   useEffect(() => {
     const queryActivitiesUser = query(
@@ -64,31 +67,12 @@ export function Deliveries() {
     await navigator.share(shareTask);
   }
 
-  async function findStudent(e: ChangeEvent<HTMLInputElement>) {
-    if(!e.target.value) return;
+  async function removeTask() {
+    const collectionTeste = doc(database, "tasks", String(id));
 
-    try {
-      const queryActivitiesUser = query(
-        collection(database, "tasksDelivered"),
-        where("userName", "==", e.target.value),
-        where("activityId", "==", id)
-      );
+    await deleteDoc(collectionTeste);
 
-      const response = await getDocs(queryActivitiesUser);
-
-      const data = response.docs.map(doc => {
-        const data = doc.data() as { userName: string };
-
-        return {
-          id: doc.id,
-          userName: data.userName
-        }
-      }) as StudentActivity[];
-        
-      setActivitiesStudent(data);
-    } catch (error) {
-      console.log(error);
-    }
+    navigate(-1);
   }
 
   return (
@@ -125,7 +109,7 @@ export function Deliveries() {
             </Flex>
             <Flex
               as="button"
-              justify="center"
+              justify="center"  
               onClick={shareTask}
               align="center"
             >
@@ -143,45 +127,11 @@ export function Deliveries() {
         mx="auto"
         direction="column"
         maxW={720}
+        position="relative"
         w="90%"
+        h="calc(100vh - 14vh)"
       >
-        <FormControl
-          as={Flex}
-          mt={-5}
-          align="center"
-          borderRadius="8px"
-          p=".5rem .5rem"
-          background="#FAFAFA"
-          border="1px solid #FAFAFA"
-          transition=".25s"
-          _focusWithin={{
-            border: "1px solid blue"
-          }}
-        >
-          <MdSearch
-            color="#3333"
-            size={24}
-          />
-          <Input
-            placeholder="Buscar Estudante"
-            onChange={findStudent}
-            variant="unstyled"
-            ml={2}
-          />
-        </FormControl>
-        {!!activitiesStudent.length &&
-          <Button
-            mt={8}
-            alignSelf="flex-end"
-            bg="primary"
-            borderRadius={8}
-            p={"5px 20px"}
-          >
-            <Text color="#FFF" mr={2}>Concluir Lista</Text>
-            <MdDone color="#FFF"/>
-          </Button>}
-
-        <Box my={2}>
+        <Box my={-5}>
           {activitiesStudent.length ?
             activitiesStudent.map(student => (
               <List
@@ -196,6 +146,36 @@ export function Deliveries() {
             })
           }
         </Box>
+
+        <Button
+          mt={8}
+          position="absolute"
+          bg="#7455FE"
+          w={50}
+          h={50}
+          borderRadius={25}
+          onClick={removeTask}
+          bottom={10}
+          right={0}
+          transition=".5s"
+          _hover={{
+            width: "10rem",
+          }}
+        >
+          <Text 
+            color="#FFF" 
+            overflowX="hidden"
+          >
+            Concluir Lista
+          </Text>
+          <MdDone 
+            color="#FFF" 
+            size={20} 
+            style={{ 
+              overflow: "visible", 
+            }}
+          />
+        </Button>
       </Flex>
     </>
   )

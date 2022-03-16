@@ -1,15 +1,17 @@
-import { ChangeEvent, useEffect, useState } from "react";
-import { Box, Button, Flex, Input, Text, useToast, Spinner, Center, Stack, Select, Image, Wrap } from "@chakra-ui/react";
-import { getAuth, signOut } from "firebase/auth";
+import { ChangeEvent, useEffect, useState, useRef } from "react";
+import { Box, Button, Flex, Input, Text, useToast, Select, Image } from "@chakra-ui/react";
 import { addDoc, collection, getDocs, getFirestore, orderBy, OrderByDirection, query, where } from "firebase/firestore";
+import { getAuth, signOut } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 import { MdAdd, MdLogout } from "react-icons/md";
 import { BiMenuAltLeft } from "react-icons/bi";
-import { useNavigate } from "react-router-dom";
+
 import { useAuth } from "../contexts/AuthContext";
 import { app } from "../services/firebase";
 import { SkeletonEffect } from "../utils/skeleton";
 
 import { List } from "../components/List";
+import { Loader } from "../components/Loader";
 
 type Task = {
   id: string;
@@ -25,16 +27,16 @@ export function Tasks() {
   const database = getFirestore(app);
   const auth = getAuth(app);
 
-  const toast = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const toast = useToast();
 
-  const [task, setTask] = useState<string>("");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loadButton, setLoadButton] = useState(false);
   const [loadTaks, setLoadTaks] = useState(false);
   const [order, setOrder] = useState<Order>({ field: "name", order: "asc" });
-  const [taskId, setTaskId] = useState("");
+
+  const inputTask = useRef<HTMLInputElement>({} as HTMLInputElement);
 
   useEffect(() => {
     setLoadTaks(true);
@@ -87,24 +89,26 @@ export function Tasks() {
   }
 
   async function handleAddTask() {
-    if (!task) return;
+    if (!inputTask.current.value) return;
 
     try {
       setLoadButton(true);
 
       const queryTaskByName = query(
         collection(database, "tasks"),
-        where("name", "==", task),
+        where("name", "==", inputTask.current.value),
       );
 
       const response = await getDocs(queryTaskByName);
 
       const taskAlreadyExists = response.docs
         .map(doc => doc.data())
-        .some(data => data.name === task);
+        .some(data => data.name === inputTask.current.value);
 
       if (taskAlreadyExists) {
         setLoadButton(false);
+
+        inputTask.current.value = "";
 
         return toast({
           title: "Tarefa já cadastrada",
@@ -118,15 +122,15 @@ export function Tasks() {
 
       const newTask = await addDoc(
         collection(database, "tasks"),
-        { userId: user.uid, name: task, created_at: Date.now() }
+        { userId: user.uid, name: inputTask.current.value, created_at: Date.now() }
       );
 
       setTasks(taks => [...taks, {
         id: newTask.id,
-        name: task
+        name: inputTask.current.value
       }]);
 
-      setTask("");
+      inputTask.current.value = "";
     } catch (error) {
       console.log(error);
     }
@@ -148,10 +152,7 @@ export function Tasks() {
           w="90%"
           mx="auto"
         >
-          <Flex 
-            align="center" 
-            gap=".25rem"
-          >
+          <Flex align="center" gap=".25rem">
             <Image
               src={String(user.photoURL)}
               w="40px"
@@ -177,8 +178,7 @@ export function Tasks() {
       >
         <Input
           placeholder="Nova Tarefa"
-          onChange={e => setTask(e.target.value)}
-          value={task}
+          ref={inputTask}
           fontSize={18}
           variant="outline"
           bg="#FFF"
@@ -197,7 +197,7 @@ export function Tasks() {
       </Flex>
 
       <Flex
-        mt={8}
+        mt={5}
         direction="column"
         maxW={720}
         w="90%"
@@ -234,32 +234,6 @@ export function Tasks() {
       </Flex>
     </>
   ) : (
-    <Center
-      h="100vh"
-      bg="primary"
-      maxW="100%"
-      mx="auto"
-    >
-      <Flex
-        as={Stack}
-        spacing={4}
-        align="center"
-        direction="column"
-      >
-        <Spinner
-          thickness='5px'
-          speed='1s'
-          emptyColor='gray.600'
-          color='white'
-          size='xl'
-        />
-        <Text
-          color="#FFF"
-          fontSize="1.5rem"
-        >
-          Carregando
-        </Text>
-      </Flex>
-    </Center>
+    <Loader />
   );
 }

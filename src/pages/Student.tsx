@@ -1,9 +1,9 @@
+import { useEffect, useState } from "react";
 import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Box, Button, Flex, Image, Stack, Text } from "@chakra-ui/react";
 import { collection, getDocs, getFirestore } from "firebase/firestore";
-import { useEffect, useState } from "react";
-import { MdArrowBackIos } from "react-icons/md";
-import { useParams, useNavigate } from "react-router-dom";
 import { app } from "../services/firebase";
+import { useParams, useNavigate } from "react-router-dom";
+import { MdArrowBackIos } from "react-icons/md";
 
 type StudentActivity = {
   userName: string;
@@ -42,8 +42,6 @@ export function Student() {
             })
             .find(doc => doc.id === id) as StudentActivity;
 
-
-
           setStudent(data);
         })
         .catch(error => console.log(error))
@@ -57,7 +55,7 @@ export function Student() {
       <Box bg="primary" h="14vh">
         <Flex
           maxW={720}
-          w="90%"
+          w="90%" 
           mx="auto"
           py={4}
         >
@@ -110,11 +108,11 @@ export function Student() {
             borderTopLeftRadius: "5px",
             borderBottomLeftRadius: "5px",
             w: "5px",
+            h: "100%",
             left: 0,
             top: 0,
             background: "primary",
             content: `""`,
-            h: "100%"
           }}
         >
           <Text>Data da Entrega</Text>

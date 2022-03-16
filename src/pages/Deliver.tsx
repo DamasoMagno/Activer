@@ -1,9 +1,10 @@
-import { Box, Button, Center, Flex, Image, Input, Stack, Text, useToast } from "@chakra-ui/react";
-import { addDoc, collection, getDocs, getFirestore, query, where } from "firebase/firestore";
-import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import { FormEvent, useEffect, useState } from "react";
-import { MdArrowBackIos, MdSend } from "react-icons/md";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { AlertDialog, AlertDialogOverlay, Box, Button, Center, Flex, Image, Input, Stack, Text, toast, useDisclosure } from "@chakra-ui/react";
+import { addDoc, collection, getDocs, getFirestore, query, updateDoc, where } from "firebase/firestore";
+import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
+import { Link, useParams } from "react-router-dom";
+import { MdArrowBackIos, MdClose, MdDone, MdSend } from "react-icons/md";
+
 import { useAuth } from "../contexts/AuthContext";
 import { app } from "../services/firebase";
 
@@ -11,17 +12,17 @@ import { app } from "../services/firebase";
 export function Deliver() {
   const params = useParams<string>();
   const id = params.id as string;
-  const navigate = useNavigate();
-  const toast = useToast();
 
   const database = getFirestore(app);
   const storage = getStorage(app);
+  const { isOpen, onOpen, onClose } = useDisclosure()
 
   const { user } = useAuth();
 
   const [attachments, setAttachments] = useState<File>({} as File);
   const [previewAttachments, setPreviewAttachments] = useState<string>("");
-  const [activitySendLoading, setActivityLoading] = useState(false);
+  const [activitySendLoading, setActivityLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     const queryActivitiesUser = query(
@@ -69,6 +70,26 @@ export function Deliver() {
 
       await uploadBytes(storageRef, attachments);
 
+      const queryActivitiesUser = query(
+        collection(database, "tasksDelivered"),
+        where("activityId", "==", id)
+      );
+  
+      const response = await getDocs(queryActivitiesUser);
+
+      const userTask =  response.docs
+          .map(doc => doc.data())
+          .find(data => data.userName === user.displayName);  
+          
+      if(userTask) {
+        console.log(userTask);
+
+        setActivityLoading(false);
+
+        return 
+      }
+      
+
       const imageURL = await getDownloadURL(storageRef);
 
       await addDoc(collection(database, "tasksDelivered"), {
@@ -78,15 +99,17 @@ export function Deliver() {
         created_at: Date.now()
       });
 
-      navigate("/delivered/success");
+      onOpen();
+
+      setTimeout(() => onClose(), 2000);
     } catch (error) {
-      console.log(error);
-      navigate("/deliver/error");
+      setTimeout(() => onClose(), 2000);
+      
+      setError("Erro ao enviar a tarefa");
     }
 
     setActivityLoading(false);
   }
-
 
   return (
     <>
@@ -182,6 +205,38 @@ export function Deliver() {
           <MdSend color="#FFF" />
         </Button>
       </Flex>
+
+      <AlertDialog
+        isOpen={isOpen}
+        onClose={onClose}
+        leastDestructiveRef={undefined}
+      >
+        <AlertDialogOverlay 
+          bg="rgba(0, 0, 0, .7)" 
+        >
+          <Flex
+            h="100vh"
+            direction="column"
+            justify="center"
+            align="center"
+          >
+            {error ?
+              <MdClose color="red" size={100} /> :
+              <MdDone color="green" size={100} />
+            }
+            <Text
+              color="#FFF"
+              w={200}
+              mt={5}
+              textAlign="center"
+              fontWeight="700"
+              fontSize="1.5rem"
+            >
+              {error ? error : "Tarefa enviada com sucesso"}
+            </Text>
+          </Flex>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </>
   )
 }

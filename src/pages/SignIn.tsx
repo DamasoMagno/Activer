@@ -1,7 +1,8 @@
 import { Box, Button, Flex, Heading, Text } from "@chakra-ui/react";
+import { useNavigate } from "react-router-dom";
 import { MdLogin } from "react-icons/md";
 import { FaTasks } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+
 import { useAuth } from "../contexts/AuthContext";
 
 export function SignIn() {
