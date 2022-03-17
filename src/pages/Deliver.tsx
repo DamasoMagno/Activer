@@ -1,28 +1,42 @@
-import { FormEvent, useEffect, useState } from "react";
-import { AlertDialog, AlertDialogOverlay, Box, Button, Center, Flex, Image, Input, Stack, Text, toast, useDisclosure } from "@chakra-ui/react";
-import { addDoc, collection, getDocs, getFirestore, query, updateDoc, where } from "firebase/firestore";
-import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { AlertDialog, AlertDialogOverlay, Box, Button, Center, Flex, Image, Input, Stack, Text, useDisclosure, useToast } from "@chakra-ui/react";
+import { addDoc, collection, doc, getDoc, getDocs, query, updateDoc, where } from "firebase/firestore";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { Link, useParams } from "react-router-dom";
 import { MdArrowBackIos, MdClose, MdDone, MdSend } from "react-icons/md";
 
 import { useAuth } from "../contexts/AuthContext";
-import { app } from "../services/firebase";
+import { database, storage } from "../services/firebase";
+import { Loader } from "../components/Loader";
 
+type Task = {
+  userId: string;
+  created_at: number;
+  name: string
+}
+
+type UserTask = {
+  activityId: string;
+  attachments: string;
+  created_at: number;
+  id: string;
+  userName: string;
+}
 
 export function Deliver() {
   const params = useParams<string>();
   const id = params.id as string;
+  const toast = useToast();
 
-  const database = getFirestore(app);
-  const storage = getStorage(app);
   const { isOpen, onOpen, onClose } = useDisclosure()
 
   const { user } = useAuth();
 
-  const [attachments, setAttachments] = useState<File>({} as File);
+  const [attachments, setAttachments] = useState({} as File);
   const [previewAttachments, setPreviewAttachments] = useState<string>("");
   const [activitySendLoading, setActivityLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+
 
   useEffect(() => {
     const queryActivitiesUser = query(
@@ -41,23 +55,13 @@ export function Deliver() {
           setPreviewAttachments(userTask.attachments);
         };
       })
-  }, []);
+  }, [user]);
 
 
-  useEffect(() => {
-    try {
-      if (!attachments.name) return;
-
-      const binaryData = [];
-      binaryData.push(attachments as BlobPart);
-
-      const imageUrl = URL.createObjectURL(new Blob(binaryData));
-
-      setPreviewAttachments(imageUrl);
-    } catch (error) {
-      console.log(error);
-    }
-  }, [attachments]);
+  function throwModal() {
+    onOpen();
+    setTimeout(() => onClose(), 2000);
+  }
 
 
   async function handleSubmitStudentTask(event: FormEvent) {
@@ -66,52 +70,105 @@ export function Deliver() {
     try {
       setActivityLoading(true);
 
-      const storageRef = ref(storage, `attachments/${attachments.name}`);
+      const taskCollection = await getDoc(doc(database, "tasks", String(id)));
+      const task = taskCollection.data() as Task;
 
-      await uploadBytes(storageRef, attachments);
+      const storageRef = ref(
+        storage,
+        `attachments/student=${user.displayName}&task=${task.name}`
+      );
 
       const queryActivitiesUser = query(
         collection(database, "tasksDelivered"),
         where("activityId", "==", id)
       );
-  
-      const response = await getDocs(queryActivitiesUser);
 
-      const userTask =  response.docs
-          .map(doc => doc.data())
-          .find(data => data.userName === user.displayName);  
-          
-      if(userTask) {
-        console.log(userTask);
+      const response = await getDocs(queryActivitiesUser)
+        .then(data => data.docs);
+
+      const userTask = response.map(doc => {
+        const data = doc.data() as Omit<UserTask, "id">;
+
+        return {
+          id: doc.id,
+          ...data
+        }
+      }).find(data => data.userName === user.displayName) as UserTask;
+
+      if (userTask) {
+        await uploadBytes(storageRef, attachments);
+
+        const imageURL = await getDownloadURL(storageRef);
+
+        await updateDoc(
+          doc(database, "tasksDelivered", String(userTask.id)),
+          {
+            attachments: imageURL,
+            created_at: Date.now()
+          }
+        );
+
+        throwModal();
 
         setActivityLoading(false);
 
-        return 
+        return
       }
-      
+
+      await uploadBytes(storageRef, attachments);
 
       const imageURL = await getDownloadURL(storageRef);
 
-      await addDoc(collection(database, "tasksDelivered"), {
-        userName: user.displayName,
-        attachments: imageURL,
-        activityId: id,
-        created_at: Date.now()
-      });
+      await addDoc(
+        collection(database, "tasksDelivered"),
+        {
+          userName: user.displayName,
+          attachments: imageURL,
+          activityId: id,
+          created_at: Date.now()
+        }
+      );
 
-      onOpen();
-
-      setTimeout(() => onClose(), 2000);
+      throwModal();
     } catch (error) {
-      setTimeout(() => onClose(), 2000);
-      
       setError("Erro ao enviar a tarefa");
+
+      throwModal();
     }
 
     setActivityLoading(false);
   }
 
-  return (
+
+  function uploadImage(e: ChangeEvent<HTMLInputElement>) {
+    try {
+      if (!e.target.files) return
+
+      const filesType = ["jpeg", "png", "jpg"];
+      const file: File = e.target.files[0];
+
+      const fileInImage = filesType.some(type => file.type.includes(type));
+
+      if (!fileInImage) {
+        return toast({
+          title: "Apenas imagens são aceitas",
+          status: "info",
+          position: "top"
+        });
+      }
+
+      setAttachments(file);
+
+      const imageUrl = URL.createObjectURL(file);
+
+      setPreviewAttachments(imageUrl);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  
+
+  return user.displayName ? (
     <>
       <Box
         h="14vh"
@@ -189,7 +246,7 @@ export function Deliver() {
               opacity={0}
               w="100%"
               h="100%"
-              onChange={e => e.target.files && setAttachments(e.target.files[0])}
+              onChange={uploadImage}
             />
           </Flex>
         </Stack>
@@ -211,8 +268,8 @@ export function Deliver() {
         onClose={onClose}
         leastDestructiveRef={undefined}
       >
-        <AlertDialogOverlay 
-          bg="rgba(0, 0, 0, .7)" 
+        <AlertDialogOverlay
+          bg="rgba(0, 0, 0, .7)"
         >
           <Flex
             h="100vh"
@@ -238,5 +295,7 @@ export function Deliver() {
         </AlertDialogOverlay>
       </AlertDialog>
     </>
+  ) : (
+    <Loader />
   )
 }

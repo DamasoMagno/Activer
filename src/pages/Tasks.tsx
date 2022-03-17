@@ -108,8 +108,6 @@ export function Tasks() {
       if (taskAlreadyExists) {
         setLoadButton(false);
 
-        inputTask.current.value = "";
-
         return toast({
           title: "Tarefa já cadastrada",
           status: "info",

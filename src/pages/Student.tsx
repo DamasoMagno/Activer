@@ -4,6 +4,8 @@ import { collection, getDocs, getFirestore } from "firebase/firestore";
 import { app } from "../services/firebase";
 import { useParams, useNavigate } from "react-router-dom";
 import { MdArrowBackIos } from "react-icons/md";
+import { useAuth } from "../contexts/AuthContext";
+import { Loader } from "../components/Loader";
 
 type StudentActivity = {
   userName: string;
@@ -16,6 +18,7 @@ export function Student() {
 
   const database = getFirestore(app);
   const { id } = useParams();
+  const { user } = useAuth();
 
   const [student, setStudent] = useState<StudentActivity>({} as StudentActivity);
 
@@ -50,7 +53,7 @@ export function Student() {
     }
   }, []);
 
-  return (
+  return user.displayName ? (
     <>
       <Box bg="primary" h="14vh">
         <Flex
@@ -168,5 +171,7 @@ export function Student() {
         </Accordion>
       </Stack>
     </>
-  );
+  ) : (
+    <Loader />
+  )
 }

@@ -1,14 +1,16 @@
-import { ChangeEvent, useEffect, useState } from "react";
-import { Box, Button, Flex, FormControl, Input, Text } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
+import { Box, Button, Flex, Text } from "@chakra-ui/react";
 import { collection, deleteDoc, doc, getDocs, getFirestore, orderBy, query, where } from "firebase/firestore";
 import { FiUser, FiUpload } from "react-icons/fi";
-import { MdArrowBackIos, MdDone, MdSearch, MdShare } from "react-icons/md";
+import { MdArrowBackIos, MdDone, MdShare } from "react-icons/md";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { app } from "../services/firebase";
 import { SkeletonEffect } from "../utils/skeleton";
 
 import { List } from "../components/List";
+import { useAuth } from "../contexts/AuthContext";
+import { Loader } from "../components/Loader";
 
 export type StudentActivity = {
   id: string;
@@ -21,9 +23,10 @@ export function Deliveries() {
   const { id } = useParams();
   const { search } = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [activitiesStudent, setActivitiesStudent] = useState<StudentActivity[]>([]);
-  const [ t, setId ] = useState([]);
+  const [t, setId] = useState([]);
 
   useEffect(() => {
     const queryActivitiesUser = query(
@@ -75,7 +78,7 @@ export function Deliveries() {
     navigate(-1);
   }
 
-  return (
+  return user.displayName ? (
     <>
       <Box
         bg="primary"
@@ -109,7 +112,7 @@ export function Deliveries() {
             </Flex>
             <Flex
               as="button"
-              justify="center"  
+              justify="center"
               onClick={shareTask}
               align="center"
             >
@@ -162,21 +165,23 @@ export function Deliveries() {
             width: "10rem",
           }}
         >
-          <Text 
-            color="#FFF" 
+          <Text
+            color="#FFF"
             overflowX="hidden"
           >
             Concluir Lista
           </Text>
-          <MdDone 
-            color="#FFF" 
-            size={20} 
-            style={{ 
-              overflow: "visible", 
+          <MdDone
+            color="#FFF"
+            size={20}
+            style={{
+              overflow: "visible",
             }}
           />
         </Button>
       </Flex>
     </>
+  ) : (
+    <Loader />
   )
 }
