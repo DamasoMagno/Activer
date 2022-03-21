@@ -1,17 +1,17 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
-import { AlertDialog, AlertDialogOverlay, Box, Button, Center, Flex, Image, Input, Stack, Text, useDisclosure, useToast } from "@chakra-ui/react";
+import { Box, Button, Center, Flex, Image, Input, Stack, Text, useToast } from "@chakra-ui/react";
 import { addDoc, collection, doc, getDoc, getDocs, query, updateDoc, where } from "firebase/firestore";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import { Link, useParams } from "react-router-dom";
-import { MdArrowBackIos, MdClose, MdDone, MdSend } from "react-icons/md";
+import { getDownloadURL, ref, StorageReference, uploadBytes } from "firebase/storage";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { MdArrowBackIos, MdSend } from "react-icons/md";
 
 import { useAuth } from "../contexts/AuthContext";
 import { database, storage } from "../services/firebase";
-import { Loader } from "../components/Loader";
+import { Splash } from "./Splash";
 
 type Task = {
   userId: string;
-  created_at: number;
+  finished_at: number;
   name: string
 }
 
@@ -24,27 +24,39 @@ type UserTask = {
 }
 
 export function Deliver() {
+  const navigate = useNavigate();
   const params = useParams<string>();
   const id = params.id as string;
   const toast = useToast();
-
-  const { isOpen, onOpen, onClose } = useDisclosure()
 
   const { user } = useAuth();
 
   const [attachments, setAttachments] = useState({} as File);
   const [previewAttachments, setPreviewAttachments] = useState<string>("");
-  const [activitySendLoading, setActivityLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
 
+  const [activitySendLoading, setActivityLoading] = useState<boolean>(false);
+  const [imageAlreadyStoraged, setImageAlreadyStoraged] = useState<boolean>(false);
 
   useEffect(() => {
-    const queryActivitiesUser = query(
+    const task = doc(database, "tasks", String(id));
+
+    getDoc(task)
+      .then(response => {
+        const data = response.data() as Task;
+
+        if (!data) {
+          navigate("/confirmation/register")
+        }
+      });
+  }, []);
+
+  useEffect(() => {
+    const queryTaskUser = query(
       collection(database, "tasksDelivered"),
       where("activityId", "==", id)
     );
 
-    getDocs(queryActivitiesUser)
+    getDocs(queryTaskUser)
       .then(response => {
 
         const userTask = response.docs
@@ -52,67 +64,61 @@ export function Deliver() {
           .find(data => data.userName === user.displayName);
 
         if (userTask) {
+          setImageAlreadyStoraged(true);
+
           setPreviewAttachments(userTask.attachments);
         };
       })
   }, [user]);
 
+  async function updateAttachmentTask(userTaskId: string, storageRef: StorageReference) {
+    await uploadBytes(storageRef, attachments);
 
-  function throwModal() {
-    onOpen();
-    setTimeout(() => onClose(), 2000);
+    const imageURL = await getDownloadURL(storageRef);
+
+    await updateDoc(
+      doc(database, "tasksDelivered", String(userTaskId)),
+      {
+        attachments: imageURL,
+        created_at: Date.now()
+      }
+    );
   }
 
-
-  async function handleSubmitStudentTask(event: FormEvent) {
+  async function handleSubmitTask(event: FormEvent) {
     event.preventDefault();
 
     try {
       setActivityLoading(true);
 
-      const taskCollection = await getDoc(doc(database, "tasks", String(id)));
-      const task = taskCollection.data() as Task;
+      const taskDoc = doc(database, "tasks", String(id));
+
+      const { name: taskName } = await getDoc(taskDoc).then(doc => doc.data()) as Task;
 
       const storageRef = ref(
         storage,
-        `attachments/student=${user.displayName}&task=${task.name}`
+        `attachments/student=${user.displayName}&task=${taskName}`
       );
 
-      const queryActivitiesUser = query(
+      const queryTaskUser = query(
         collection(database, "tasksDelivered"),
         where("activityId", "==", id)
       );
 
-      const response = await getDocs(queryActivitiesUser)
+      const response = await getDocs(queryTaskUser)
         .then(data => data.docs);
 
       const userTask = response.map(doc => {
-        const data = doc.data() as Omit<UserTask, "id">;
-
         return {
           id: doc.id,
-          ...data
+          userName: doc.data().userName
         }
       }).find(data => data.userName === user.displayName) as UserTask;
 
       if (userTask) {
-        await uploadBytes(storageRef, attachments);
+        updateAttachmentTask(userTask.id, storageRef);
 
-        const imageURL = await getDownloadURL(storageRef);
-
-        await updateDoc(
-          doc(database, "tasksDelivered", String(userTask.id)),
-          {
-            attachments: imageURL,
-            created_at: Date.now()
-          }
-        );
-
-        throwModal();
-
-        setActivityLoading(false);
-
-        return
+        return;
       }
 
       await uploadBytes(storageRef, attachments);
@@ -129,16 +135,11 @@ export function Deliver() {
         }
       );
 
-      throwModal();
+      navigate("/confirmation/deliver");
     } catch (error) {
-      setError("Erro ao enviar a tarefa");
-
-      throwModal();
+      console.log(error);
     }
-
-    setActivityLoading(false);
   }
-
 
   function uploadImage(e: ChangeEvent<HTMLInputElement>) {
     try {
@@ -162,27 +163,40 @@ export function Deliver() {
       const imageUrl = URL.createObjectURL(file);
 
       setPreviewAttachments(imageUrl);
+
+      setImageAlreadyStoraged(false);
     } catch (error) {
       console.log(error);
     }
   }
-  
 
   return user.displayName ? (
     <>
       <Box
-        h="14vh"
-        bg="primary"
+        bg="background"
+        position="relative"
+        py=".25rem"
+        as="header"
       >
         <Flex
           w="90%"
           maxW={720}
           py={4}
           mx="auto"
+          align="center"
         >
           <Link to={"/"}>
             <MdArrowBackIos color="white" />
           </Link>
+          <Text
+            as="h2"
+            fontSize={20}
+            color="#FFF"
+            w="100%"
+            textAlign="center"
+          >
+            Tarefa
+          </Text>
         </Flex>
       </Box>
 
@@ -192,19 +206,20 @@ export function Deliver() {
         mx="auto"
         as="form"
         mt={8}
-        onSubmit={handleSubmitStudentTask}
+        onSubmit={handleSubmitTask}
         direction="column"
         justify="space-between"
+        py="1rem"
         h="75vh"
       >
-        <Stack spacing={4}>
+        <Stack spacing={3}>
           <Box
             border="3px dashed #7474FE"
             borderRadius={8}
-            h="250px"
+            h="200px"
             background="rgba(116, 116, 253, .5)"
           >
-            {previewAttachments ? (
+            {previewAttachments && (
               <Image
                 src={previewAttachments}
                 alt="Imagem da atividade"
@@ -212,17 +227,6 @@ export function Deliver() {
                 h="100%"
                 fit="contain"
               />
-            ) : (
-              <Center
-                h="100%"
-                maxW={200}
-                textAlign="center"
-                m="auto"
-                fontWeight={500}
-                color="#FFF"
-              >
-                Nenhum Arquivo Selecionado
-              </Center>
             )}
           </Box>
           <Flex
@@ -237,7 +241,7 @@ export function Deliver() {
               fontSize={20}
               color="#7474FE"
             >
-              {previewAttachments ? "Trocar Anexo" : "Enviar Anexo"}
+              {previewAttachments ? "Trocar Anexo" : "Selecionar Anexo"}
             </Center>
             <Input
               type="file"
@@ -256,46 +260,15 @@ export function Deliver() {
           p={6}
           type="submit"
           isLoading={activitySendLoading}
+          disabled={imageAlreadyStoraged}
           alignItems="center"
         >
           <Text color="#FFF" flex={1}>ENVIAR</Text>
           <MdSend color="#FFF" />
         </Button>
       </Flex>
-
-      <AlertDialog
-        isOpen={isOpen}
-        onClose={onClose}
-        leastDestructiveRef={undefined}
-      >
-        <AlertDialogOverlay
-          bg="rgba(0, 0, 0, .7)"
-        >
-          <Flex
-            h="100vh"
-            direction="column"
-            justify="center"
-            align="center"
-          >
-            {error ?
-              <MdClose color="red" size={100} /> :
-              <MdDone color="green" size={100} />
-            }
-            <Text
-              color="#FFF"
-              w={200}
-              mt={5}
-              textAlign="center"
-              fontWeight="700"
-              fontSize="1.5rem"
-            >
-              {error ? error : "Tarefa enviada com sucesso"}
-            </Text>
-          </Flex>
-        </AlertDialogOverlay>
-      </AlertDialog>
     </>
   ) : (
-    <Loader />
+    <Splash />
   )
 }

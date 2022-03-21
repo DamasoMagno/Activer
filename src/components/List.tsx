@@ -14,10 +14,10 @@ export function List({ title, router }: ListProps) {
       to={router}
       justify="space-between"
       align="center"
-      p={4}
+      p=".85rem"
       cursor="pointer"
       color="#FFF"
-      bg="#7455FE"
+      bg="heading"
       mt={2}
       borderRadius={4}
     >

@@ -1,7 +1,7 @@
-import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "firebase/auth";
+import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "firebase/auth";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
-import { useNavigate, useNavigationType } from "react-router-dom";
-import { app } from "../services/firebase";
+import { useNavigate } from "react-router-dom";
+import { auth } from "../services/firebase";
 
 type User = {
   displayName: string | null;
@@ -18,13 +18,13 @@ type AuthContextProviderProps = {
   children: ReactNode;
 }
 
-export const AuthContext = createContext({} as AuthContextProps);
+const AuthContext = createContext({} as AuthContextProps);
+
 
 export function AuthContextProvider({ children }: AuthContextProviderProps) {
-  const auth = getAuth(app);
   const navigate = useNavigate();
 
-  const [user, setUser] = useState<User>({} as User);
+  const [user, setUser] = useState({} as User);
 
   useEffect(() => {
     onAuthStateChanged(auth, userLogged => {
@@ -39,13 +39,15 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) {
       });
     });
   }, []);
-
+  
   async function signIn() {
     const provider = new GoogleAuthProvider();
 
     try {
       const response = await signInWithPopup(auth, provider);
       setUser({...response.user});
+
+      console.log(response.user);
     } catch (error) {
       console.log(error);
     }
@@ -53,7 +55,7 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) {
 
   return (
     <AuthContext.Provider value={{ user, signIn }}>
-      {children}
+      { children }
     </AuthContext.Provider>
   );
 }

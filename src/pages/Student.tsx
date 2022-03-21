@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Box, Button, Flex, Image, Stack, Text } from "@chakra-ui/react";
-import { collection, getDocs, getFirestore } from "firebase/firestore";
-import { app } from "../services/firebase";
+import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Box, Flex, Image, Stack, Text } from "@chakra-ui/react";
+import { collection, getDocs } from "firebase/firestore";
+import { database } from "../services/firebase";
 import { useParams, useNavigate } from "react-router-dom";
 import { MdArrowBackIos } from "react-icons/md";
 import { useAuth } from "../contexts/AuthContext";
-import { Loader } from "../components/Loader";
+import { Splash } from "./Splash";
 
 type StudentActivity = {
   userName: string;
@@ -15,8 +15,6 @@ type StudentActivity = {
 
 export function Student() {
   const navigate = useNavigate()
-
-  const database = getFirestore(app);
   const { id } = useParams();
   const { user } = useAuth();
 
@@ -28,22 +26,21 @@ export function Student() {
 
       getDocs(activityCollection)
         .then(response => {
-          const data = response.docs
-            .map(doc => {
-              const convertedDate = new Date(doc.data().created_at)
+          const data = response.docs.map(doc => {
+            const { userName, attachments, created_at } = doc.data();
+            const date = new Date(created_at);
 
-              return {
-                id: doc.id,
-                userName: doc.data().userName,
-                created_at: 
-                  `${convertedDate.getDate()}/
-                  ${convertedDate.getMonth().toString().padStart(2, "0")}/
-                  ${convertedDate.getFullYear()}
+            return {
+              id: doc.id,
+              userName: userName,
+              attachments: attachments,
+              created_at: `
+                  ${date.getDate().toString().padStart(2, "0")}/
+                  ${date.getMonth().toString().padStart(2, "0")}/
+                  ${date.getFullYear()}
                 `,
-                attachments: doc.data().attachments
-              };
-            })
-            .find(doc => doc.id === id) as StudentActivity;
+            };
+          }).find(doc => doc.id === id) as StudentActivity;
 
           setStudent(data);
         })
@@ -55,19 +52,32 @@ export function Student() {
 
   return user.displayName ? (
     <>
-      <Box bg="primary" h="14vh">
+      <Box
+        bg="background"
+        p="1.15rem 0 3rem"
+        as="header"
+      >
         <Flex
           maxW={720}
-          w="90%" 
+          w="90%"
           mx="auto"
-          py={4}
+          align="center"
         >
-          <Button onClick={() => navigate(-1)} variant="none" p={0}>
+          <Flex as="button" onClick={() => navigate(-1)}>
             <MdArrowBackIos
               size={20}
-              color="#FFF"
+              color="white"
             />
-          </Button>
+          </Flex>
+          <Text
+            as="h2"
+            fontSize={20}
+            color="primaryText"
+            w="calc(100% - 2.7rem)"
+            textAlign="center"
+          >
+            Aluno
+          </Text>
         </Flex>
       </Box>
 
@@ -75,73 +85,67 @@ export function Student() {
         spacing={4}
         mt={-5}
         w="90%"
+        as="main"
         maxW={720}
         mx="auto"
       >
         <Box
-          position="relative"
           background="#FAFAFA"
-          p={4}
+          p="1.125rem"
           borderRadius={5}
-          _after={{
-            position: "absolute",
-            borderTopLeftRadius: "5px",
-            borderBottomLeftRadius: "5px",
-            w: "5px",
-            left: 0,
-            top: 0,
-            background: "primary",
-            content: `""`,
-            h: "100%"
-          }}
+          boxShadow="0px 0px 10px 1px rgba(0, 0, 0, .25)"
         >
-          <Text color="#333">Nome Aluno</Text>
-          <Text mt={2} fontSize={20} fontWeight="600">
-            {student.userName}
-          </Text>
+          <Stack spacing="1rem">
+            <Box>
+              <Text 
+                color="rgba(0, 0, 0, .5)"
+                fontSize=".85rem"
+                textTransform="uppercase"
+              >
+                Nome Aluno
+              </Text>
+              <Text
+                mt=".25rem"
+                display="block"
+                as="strong"
+                fontSize="1.25rem"
+              >
+                {student.userName}
+              </Text>
+            </Box>
+
+            <Box>
+              <Text 
+                color="rgba(0, 0, 0, .5)"
+                fontSize=".85rem"
+                textTransform="uppercase"
+              >
+                Data da Entrega
+              </Text>
+              <Text
+                mt=".25rem"
+                display="block"
+                fontSize="1.25rem"
+                as="strong"
+              >
+                {student.created_at}
+              </Text>
+            </Box>
+          </Stack>
         </Box>
 
-        <Box
-          position="relative"
+        <Accordion 
+          allowToggle
           background="#FAFAFA"
-          p={4}
+          p="1.125rem"
           borderRadius={5}
-          _after={{
-            position: "absolute",
-            borderTopLeftRadius: "5px",
-            borderBottomLeftRadius: "5px",
-            w: "5px",
-            h: "100%",
-            left: 0,
-            top: 0,
-            background: "primary",
-            content: `""`,
-          }}
+          boxShadow="0px 0px 10px 1px rgba(0, 0, 0, .25)"
         >
-          <Text>Data da Entrega</Text>
-          <Text mt={2} fontSize={20} fontWeight="600">
-            {student.created_at}
-          </Text>
-        </Box>
-
-        <Accordion allowToggle>
           <AccordionItem
             position="relative"
             background="#FAFAFA"
-            p={4}
             border="none"
             borderRadius={5}
-            _after={{
-              position: "absolute",
-              borderTopLeftRadius: "5px",
-              borderBottomLeftRadius: "5px",
-              w: "5px",
-              left: 0,
-              top: 0,
-              background: "primary",
-              content: `""`,
-              h: "100%"
-            }}
           >
             <AccordionButton
               p={0}
@@ -155,23 +159,26 @@ export function Student() {
                 background: "transparent"
               }}
             >
-              <Text flex={1} textAlign="left">Anexo</Text>
-              <AccordionIcon />
+              <Text 
+                color="rgba(0, 0, 0, .5)"
+                fontSize=".85rem"
+                textTransform="uppercase"
+                flex={1} 
+                textAlign="left"
+              >
+                Anexo
+              </Text>
+              <AccordionIcon color="rgba(0, 0, 0, .5)"/>
             </AccordionButton>
 
-            <AccordionPanel>
-              <Image
-                src={String(student.attachments)}
-                mt={5}
-                fontSize={20}
-                fontWeight="600"
-              />
+            <AccordionPanel mt=".5rem">
+              <Image src={String(student.attachments)}/>
             </AccordionPanel>
           </AccordionItem>
         </Accordion>
       </Stack>
     </>
   ) : (
-    <Loader />
+    <Splash />
   )
 }

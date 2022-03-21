@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Box, Button, Flex, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Input, Text } from "@chakra-ui/react";
 import { collection, deleteDoc, doc, getDocs, getFirestore, orderBy, query, where } from "firebase/firestore";
-import { FiUser, FiUpload } from "react-icons/fi";
-import { MdArrowBackIos, MdDone, MdShare } from "react-icons/md";
+import { FiUser, FiUpload, FiAlertCircle } from "react-icons/fi";
+import { MdArrowBackIos, MdDone, MdSearch, MdShare, MdUpload } from "react-icons/md";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { app } from "../services/firebase";
@@ -10,7 +10,10 @@ import { SkeletonEffect } from "../utils/skeleton";
 
 import { List } from "../components/List";
 import { useAuth } from "../contexts/AuthContext";
-import { Loader } from "../components/Loader";
+import { Splash } from "./Splash";
+import { SpeedDial } from "../components/SpeedDial";
+import { SpeedButton } from "../components/SpeedDial/button";
+import { Search } from "../components/Search";
 
 export type StudentActivity = {
   id: string;
@@ -26,7 +29,8 @@ export function Deliveries() {
   const { user } = useAuth();
 
   const [activitiesStudent, setActivitiesStudent] = useState<StudentActivity[]>([]);
-  const [t, setId] = useState([]);
+
+  const [loadTaks, setLoadTaks] = useState(true);
 
   useEffect(() => {
     const queryActivitiesUser = query(
@@ -55,6 +59,7 @@ export function Deliveries() {
         setActivitiesStudent(data);
       })
       .catch(error => console.log(error))
+      .finally(() => setLoadTaks(false))
   }, []);
 
   async function shareTask() {
@@ -81,107 +86,104 @@ export function Deliveries() {
   return user.displayName ? (
     <>
       <Box
-        bg="primary"
-        h="14vh"
+        bg="background"
+        p="1.15rem 0 3rem"
+        as="header"
       >
         <Flex
           maxW={720}
           w="90%"
           mx="auto"
-          py={4}
           justify="space-between"
           align="center"
         >
           <Link to="/">
-            <MdArrowBackIos
-              size={20}
-              color="white"
-            />
+            <MdArrowBackIos size="1.25rem" color="white" />
           </Link>
-          <Flex align="center" gap="1rem">
-            <Flex align="center" mr={2}>
-              <Text
-                fontSize="1rem"
-                fontWeight={600}
-                color="rgba(255, 255, 255, 85)"
-                mr={2}
-              >
-                {activitiesStudent.length}
-              </Text>
-              <FiUser color="rgba(255, 255, 255, .5)" size={18} />
-            </Flex>
-            <Flex
-              as="button"
-              justify="center"
-              onClick={shareTask}
-              align="center"
+
+          <Text
+            fontSize="1.25rem"
+            color="primaryText"
+            as="h2"
+          >
+            Participantes
+          </Text>
+
+          <Flex align="flex-end" mr={2}>
+            <Text
+              fontSize="1.125rem"
+              fontWeight="medium"
+              color="rgba(255, 255, 255, .85)"
+              mr=".25rem"
+              lineHeight="none"
             >
-              <MdShare color="rgba(255, 255, 255, .85)" size={20} />
-            </Flex>
-            <Link to={`/deliver/${id}`}>
-              <FiUpload color="rgba(255, 255, 255, .85)" size={20} />
-            </Link>
+              {activitiesStudent.length}
+            </Text>
+            <FiUser color="rgba(255, 255, 255, .5)" size={14} />
           </Flex>
         </Flex>
       </Box>
 
 
       <Flex
-        mx="auto"
         direction="column"
         maxW={720}
-        position="relative"
+        mt={-5}
+        as="main"
         w="90%"
-        h="calc(100vh - 14vh)"
+        mx="auto"
       >
-        <Box my={-5}>
-          {activitiesStudent.length ?
-            activitiesStudent.map(student => (
-              <List
-                key={student.id}
-                title={student.userName}
-                router={`/student/${student.id}`}
-              />
-            ))
-            :
-            SkeletonEffect({
-              localStorageName: "lastStudentsTasksStoraged"
+        <Box>
+          {activitiesStudent.length ? (
+            activitiesStudent.map(student => {
+              return (
+                <List
+                  key={student.id}
+                  title={student.userName}
+                  router={`/student/${student.id}`}
+                />
+              )
             })
-          }
+          ) : (activitiesStudent.length === 0 && loadTaks === false) && (
+            <>
+              <Flex
+                direction="column"
+                align="center"
+                h="60vh"
+                justify="center"
+              >
+                <FiAlertCircle color="#FF872C" size="2.5rem" />
+                <Text
+                  color="#FF872C"
+                  mt=".85rem"
+                  maxW={150}
+                  textAlign="center"
+                  fontSize="1.25rem"
+                >
+                  Nenhum Participante
+                </Text>
+              </Flex>
+            </>
+          )}
         </Box>
 
-        <Button
-          mt={8}
-          position="absolute"
-          bg="#7455FE"
-          w={50}
-          h={50}
-          borderRadius={25}
-          onClick={removeTask}
-          bottom={10}
-          right={0}
-          transition=".5s"
-          _hover={{
-            width: "10rem",
-          }}
-        >
-          <Text
-            color="#FFF"
-            overflowX="hidden"
-          >
-            Concluir Lista
-          </Text>
-          <MdDone
-            color="#FFF"
-            size={20}
-            style={{
-              overflow: "visible",
-            }}
+        <SpeedDial>
+          <SpeedButton
+            icon={MdShare}
+            onClick={shareTask}
           />
-        </Button>
+          <SpeedButton
+            icon={MdDone}
+            onClick={removeTask}
+          />
+          <SpeedButton
+            icon={MdUpload}
+            onClick={() => navigate(`/deliver/${id}`)}
+          />
+        </SpeedDial>
       </Flex>
     </>
   ) : (
-    <Loader />
+    <Splash />
   )
-}
+} 

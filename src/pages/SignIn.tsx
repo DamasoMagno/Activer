@@ -17,7 +17,7 @@ export function SignIn() {
 
   return (
     <Box
-      bg="primary"
+      bg="background"
       h="100vh"
       pt="25vh"
     >
@@ -35,7 +35,7 @@ export function SignIn() {
             <FaTasks color="#FFF" size={32} />
             <Heading
               as="h1"
-              color="#FFF"
+              color="primaryText"
               fontSize="3rem"
               ml={5}
             >
@@ -47,7 +47,7 @@ export function SignIn() {
             textAlign="left"
             fontSize={28}
             mt="4rem"
-            color="#FFF"
+            color="primaryText"
           >
             Seu gerenciador online
             de tarefas e eventos.
@@ -56,9 +56,9 @@ export function SignIn() {
 
         <Button
           onClick={handleSignUser}
-          bg="#FFF"
-          color="primary"
-          py={5}
+          bg="primaryText"
+          color="background"
+          py="1.5rem"
         >
           <Text
             flex={1}
@@ -66,7 +66,7 @@ export function SignIn() {
           >
             Entrar
           </Text>
-          <MdLogin color="#7474FE" size={20} />
+          <MdLogin color="background" size={20} />
         </Button>
 
         <FaTasks
