@@ -22,9 +22,9 @@ export function List({ title, router }: ListProps) {
       borderRadius={4}
     >
       <Text fontSize={20}>{title}</Text>
-      <MdArrowForwardIos 
-        color="#FFF" 
-        size={20} 
+      <MdArrowForwardIos
+        color="#FFF"
+        size={20}
       />
     </Flex>
   );

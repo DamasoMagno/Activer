@@ -31,7 +31,7 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) {
       if (!userLogged) {
         return navigate("/signIn");
       }
-      
+
       setUser({
         displayName: userLogged?.displayName ?? null,
         photoURL: userLogged?.photoURL ?? null,
@@ -39,15 +39,13 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) {
       });
     });
   }, []);
-  
+
   async function signIn() {
     const provider = new GoogleAuthProvider();
 
     try {
       const response = await signInWithPopup(auth, provider);
-      setUser({...response.user});
-
-      console.log(response.user);
+      setUser({ ...response.user });
     } catch (error) {
       console.log(error);
     }
@@ -55,7 +53,7 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) {
 
   return (
     <AuthContext.Provider value={{ user, signIn }}>
-      { children }
+      {children}
     </AuthContext.Provider>
   );
 }

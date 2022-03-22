@@ -5,7 +5,7 @@ import { FiUser, FiUpload, FiAlertCircle } from "react-icons/fi";
 import { MdArrowBackIos, MdDone, MdSearch, MdShare, MdUpload } from "react-icons/md";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 
-import { app } from "../services/firebase";
+import { app, database } from "../services/firebase";
 import { SkeletonEffect } from "../utils/skeleton";
 
 import { List } from "../components/List";
@@ -21,10 +21,7 @@ export type StudentActivity = {
 }
 
 export function Deliveries() {
-  const database = getFirestore(app);
-
   const { id } = useParams();
-  const { search } = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -50,12 +47,6 @@ export function Deliveries() {
           }
         }) as StudentActivity[];
 
-        if (data.length > 0) {
-          localStorage.setItem("@lastStudentsTasksStoraged", JSON.stringify(data.length));
-        } else {
-          localStorage.setItem("@lastStudentsTasksStoraged", JSON.stringify(0));
-        }
-
         setActivitiesStudent(data);
       })
       .catch(error => console.log(error))
@@ -64,10 +55,8 @@ export function Deliveries() {
 
   async function shareTask() {
     const urlToDeliverTask = location.origin + "/deliver/" + id;
-    const taskName = new URLSearchParams(search).get("taskName");
 
     const shareTask: ShareData = {
-      title: String(taskName),
       text: "Acesse o link para entregar uma tarefa ou participar de uma votação.",
       url: urlToDeliverTask,
     }

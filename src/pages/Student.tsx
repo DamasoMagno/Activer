@@ -97,7 +97,7 @@ export function Student() {
         >
           <Stack spacing="1rem">
             <Box>
-              <Text 
+              <Text
                 color="rgba(0, 0, 0, .5)"
                 fontSize=".85rem"
                 textTransform="uppercase"
@@ -115,7 +115,7 @@ export function Student() {
             </Box>
 
             <Box>
-              <Text 
+              <Text
                 color="rgba(0, 0, 0, .5)"
                 fontSize=".85rem"
                 textTransform="uppercase"
@@ -134,7 +134,7 @@ export function Student() {
           </Stack>
         </Box>
 
-        <Accordion 
+        <Accordion
           allowToggle
           background="#FAFAFA"
           p="1.125rem"
@@ -159,20 +159,20 @@ export function Student() {
                 background: "transparent"
               }}
             >
-              <Text 
+              <Text
                 color="rgba(0, 0, 0, .5)"
                 fontSize=".85rem"
                 textTransform="uppercase"
-                flex={1} 
+                flex={1}
                 textAlign="left"
               >
                 Anexo
               </Text>
-              <AccordionIcon color="rgba(0, 0, 0, .5)"/>
+              <AccordionIcon color="rgba(0, 0, 0, .5)" />
             </AccordionButton>
 
             <AccordionPanel mt=".5rem">
-              <Image src={String(student.attachments)}/>
+              <Image src={String(student.attachments)} />
             </AccordionPanel>
           </AccordionItem>
         </Accordion>

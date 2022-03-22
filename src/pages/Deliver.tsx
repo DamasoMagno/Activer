@@ -3,7 +3,7 @@ import { Box, Button, Center, Flex, Image, Input, Stack, Text, useToast } from "
 import { addDoc, collection, doc, getDoc, getDocs, query, updateDoc, where } from "firebase/firestore";
 import { getDownloadURL, ref, StorageReference, uploadBytes } from "firebase/storage";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { MdArrowBackIos, MdSend } from "react-icons/md";
+import { MdArrowBackIos, MdCloudUpload, MdSend } from "react-icons/md";
 
 import { useAuth } from "../contexts/AuthContext";
 import { database, storage } from "../services/firebase";
@@ -35,6 +35,7 @@ export function Deliver() {
   const [previewAttachments, setPreviewAttachments] = useState<string>("");
 
   const [activitySendLoading, setActivityLoading] = useState<boolean>(false);
+  const [pageLoading, setPageLoading] = useState(true);
   const [imageAlreadyStoraged, setImageAlreadyStoraged] = useState<boolean>(false);
 
   useEffect(() => {
@@ -45,7 +46,7 @@ export function Deliver() {
         const data = response.data() as Task;
 
         if (!data) {
-          navigate("/confirmation/register")
+          navigate("/confirmation/deliverFinished")
         }
       });
   }, []);
@@ -69,6 +70,7 @@ export function Deliver() {
           setPreviewAttachments(userTask.attachments);
         };
       })
+      .finally(() => setPageLoading(false));
   }, [user]);
 
   async function updateAttachmentTask(userTaskId: string, storageRef: StorageReference) {
@@ -118,6 +120,10 @@ export function Deliver() {
       if (userTask) {
         updateAttachmentTask(userTask.id, storageRef);
 
+        setActivityLoading(false);
+
+        navigate("/confirmation/deliver");
+
         return;
       }
 
@@ -139,13 +145,15 @@ export function Deliver() {
     } catch (error) {
       console.log(error);
     }
+
+    setActivityLoading(false);
   }
 
   function uploadImage(e: ChangeEvent<HTMLInputElement>) {
     try {
       if (!e.target.files) return
 
-      const filesType = ["jpeg", "png", "jpg"];
+      const filesType = ["jpeg", "png", "jpg", "webp", "svg"];
       const file: File = e.target.files[0];
 
       const fileInImage = filesType.some(type => file.type.includes(type));
@@ -170,105 +178,110 @@ export function Deliver() {
     }
   }
 
-  return user.displayName ? (
-    <>
-      <Box
-        bg="background"
-        position="relative"
-        py=".25rem"
-        as="header"
-      >
-        <Flex
-          w="90%"
-          maxW={720}
-          py={4}
-          mx="auto"
-          align="center"
+  return !user.displayName || pageLoading ?
+    (
+      <Splash />
+    ) : (
+      <>
+        <Box
+          bg="background"
+          position="relative"
+          py=".25rem"
+          as="header"
         >
-          <Link to={"/"}>
-            <MdArrowBackIos color="white" />
-          </Link>
-          <Text
-            as="h2"
-            fontSize={20}
-            color="#FFF"
-            w="100%"
-            textAlign="center"
+          <Flex
+            w="90%"
+            maxW={720}
+            py={4}
+            mx="auto"
+            align="center"
           >
-            Tarefa
-          </Text>
-        </Flex>
-      </Box>
+            <Link to={"/"}>
+              <MdArrowBackIos color="white" />
+            </Link>
+            <Text
+              as="h2"
+              fontSize={20}
+              color="#FFF"
+              w="100%"
+              textAlign="center"
+            >
+              Tarefa
+            </Text>
+          </Flex>
+        </Box>
 
-      <Flex
-        maxW={720}
-        w="90%"
-        mx="auto"
-        as="form"
-        mt={8}
-        onSubmit={handleSubmitTask}
-        direction="column"
-        justify="space-between"
-        py="1rem"
-        h="75vh"
-      >
-        <Stack spacing={3}>
-          <Box
-            border="3px dashed #7474FE"
-            borderRadius={8}
-            h="200px"
-            background="rgba(116, 116, 253, .5)"
-          >
-            {previewAttachments && (
-              <Image
-                src={previewAttachments}
-                alt="Imagem da atividade"
+        <Flex
+          maxW={720}
+          w="90%"
+          mx="auto"
+          as="form"
+          mt={8}
+          onSubmit={handleSubmitTask}
+          direction="column"
+          justify="space-between"
+          py="1rem"
+          h="80vh"
+        >
+          <Stack spacing={3}>
+            <Box
+              border="3px dashed #7474FE"
+              borderRadius={8}
+              h="200px"
+              background={`rgba(116, 116, 253, .5)`}
+            >
+              {previewAttachments ? (
+                <Image
+                  src={previewAttachments}
+                  alt="Imagem da atividade"
+                  w="100%"
+                  h="100%"
+                  fit="contain"
+                />
+              ) : (
+                <Center h="100%">
+                  <MdCloudUpload color="rgba(255, 255, 255, .5)" size="2.5rem" />
+                </Center>
+              )}
+            </Box>
+            <Flex
+              position="relative"
+              border="1px dashed #7474FE"
+              borderRadius={4}
+            >
+              <Center
+                w="100%"
+                position="absolute"
+                h="100%"
+                fontSize={20}
+                color="#7474FE"
+              >
+                {previewAttachments ? "Trocar Anexo" : "Selecionar Anexo"}
+              </Center>
+              <Input
+                type="file"
+                borderStyle="none"
+                p={3}
+                opacity={0}
                 w="100%"
                 h="100%"
-                fit="contain"
+                onChange={uploadImage}
               />
-            )}
-          </Box>
-          <Flex
-            position="relative"
-            border="1px dashed #7474FE"
-            borderRadius={4}
-          >
-            <Center
-              w="100%"
-              position="absolute"
-              h="100%"
-              fontSize={20}
-              color="#7474FE"
-            >
-              {previewAttachments ? "Trocar Anexo" : "Selecionar Anexo"}
-            </Center>
-            <Input
-              type="file"
-              borderStyle="none"
-              p={3}
-              opacity={0}
-              w="100%"
-              h="100%"
-              onChange={uploadImage}
-            />
-          </Flex>
-        </Stack>
+            </Flex>
+          </Stack>
 
-        <Button
-          bg="#7474FE"
-          p={6}
-          type="submit"
-          isLoading={activitySendLoading}
-          disabled={imageAlreadyStoraged}
-          alignItems="center"
-        >
-          <Text color="#FFF" flex={1}>ENVIAR</Text>
-          <MdSend color="#FFF" />
-        </Button>
-      </Flex>
-    </>
-  ) : (
-    <Splash />
-  )
+          <Button
+            bg="#7474FE"
+            p={6}
+            type="submit"
+            isLoading={activitySendLoading}
+            disabled={imageAlreadyStoraged}
+            alignItems="center"
+          >
+            <Text color="#FFF" flex={1}>ENVIAR</Text>
+            <MdSend color="#FFF" />
+          </Button>
+        </Flex>
+      </>
+    )
 }

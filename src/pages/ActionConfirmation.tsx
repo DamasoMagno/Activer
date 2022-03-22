@@ -1,6 +1,6 @@
 import { Box, Button, Flex, Heading, Image, Text } from "@chakra-ui/react";
 import { MdDone } from "react-icons/md";
-import { To, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import logoImage from "../assets/logo.png";
 
@@ -17,15 +17,13 @@ export function ActionConfirmation() {
 
   return (
     <Flex
-      position="absolute"
-      top="0"
       w="100vw"
       h="100vh"
       justify="center"
       direction="column"
       bg="background"
     >
-      <Box 
+      <Box
         h="90%"
         mx="auto"
         maxW={720}

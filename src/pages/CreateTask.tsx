@@ -1,11 +1,18 @@
-import { Box, Button, Flex, Input, Stack, Text, useToast } from "@chakra-ui/react";
+import { Alert, AlertIcon, Box, Button, Flex, Input, Stack, Text, useToast } from "@chakra-ui/react";
 import { addDoc, collection, getDocs, query, where } from "firebase/firestore";
-import { FormEvent, useState } from "react";
+import { useState } from "react";
 import { FiCalendar } from "react-icons/fi";
 import { MdArrowBackIos } from "react-icons/md";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { database } from "../services/firebase";
+import { FieldError, useForm } from "react-hook-form";
+
+type Task = {
+  name: string;
+  finishedAt: Date;
+  category: "" | "Activity" | "Event";
+}
 
 export function CreateTask() {
   const navigate = useNavigate();
@@ -15,28 +22,38 @@ export function CreateTask() {
 
   const [loadButton, setLoadButton] = useState(false);
 
-  const [name, setName] = useState<string>("");
-  const [finishedAt, setFinishedAt] = useState<string>("");
-  const [category, setCategory] = useState<"" | "Activity" | "Event">("");
+  const {
+    register,
+    setValue,
+    getValues,
+    setError,
+    handleSubmit,
+    formState: { errors }
+  } = useForm<Task>();
 
-  const [sucessful, setSucessful] = useState(false);
+  async function handleAddTask(data: Task) {
+    if (!getValues("category")) {
+      setError("category", {
+        message: "Categoria não selecionada"
+      })
 
-  async function handleAddTask(e: FormEvent) {
-    e.preventDefault();
+      return;
+    }
 
     try {
       setLoadButton(true);
 
       const queryTaskByName = query(
         collection(database, "tasks"),
-        where("name", "==", name),
+        where("name", "==", data.name),
+        where("userId", "==", user.uid)
       );
 
       const response = await getDocs(queryTaskByName);
 
       const taskAlreadyExists = response.docs
         .map(doc => doc.data())
-        .some(data => data.name === name);
+        .some(task => task.name === data.name);
 
       if (taskAlreadyExists) {
         setLoadButton(false);
@@ -53,19 +70,15 @@ export function CreateTask() {
 
       await addDoc(
         collection(database, "tasks"),
-        { userId: user.uid, name, finishedAt, category }
+        { userId: user.uid, ...data }
       );
 
-      setName("");
-      setFinishedAt("");
-      setCategory("");
+      setLoadButton(false);
 
-      navigate("/confirmation/register");
+      navigate("/confirmation/register")
     } catch (error) {
       console.log(error);
     }
-
-    setLoadButton(false);
   }
 
   return (
@@ -97,7 +110,7 @@ export function CreateTask() {
       </Box>
 
       <Flex
-        onSubmit={handleAddTask}
+        onSubmit={handleSubmit(handleAddTask)}
         w="90%"
         h="calc(100vh - 20vh)"
         as="form"
@@ -107,73 +120,107 @@ export function CreateTask() {
         maxW={720}
         mx="auto"
       >
-        <Stack spacing={2}>
-          <Input
-            placeholder="Titulo"
-            bg="#F5F5F5"
-            color="#969CB2"
-            border={0}
-            borderRadius=".25rem"
-            onChange={e => setName(e.target.value)}
-            _focus={{
-              border: "none"
-            }}
-          />
-          <Flex
-            align="center"
-            borderRadius=".25rem"
-            bg="#F5F5F5"
-            p=".5rem"
-          >
+        <Box>
+          <Stack spacing={2}>
             <Input
-              placeholder="Data Encerramento"
+              placeholder="Titulo"
               bg="#F5F5F5"
-              p=".25rem"
               color="#969CB2"
-              type="date"
-              css={{
-                '&::-webkit-calendar-picker-indicator': {
-                  display: 'none',
-                  '-webkit-appearance': 'none',
-                },
+              border={0}
+              borderRadius=".25rem"
+              {...register("name", { required: "Nome obrigatório" })}
+              _focus={{
+                border: "none"
               }}
-              mr=".25rem"
-              onChange={e => setFinishedAt(e.target.value)}
-              variant="unstyled"
             />
-            <FiCalendar color="#A2A7BA" />
-          </Flex>
 
-          <Flex gap=".5rem">
-            <Button
-              flex={1}
+            <Flex
+              align="center"
               borderRadius=".25rem"
-              type="button"
-              transition=".25s"
-              onClick={() => setCategory("Activity")}
-              background={category === "Activity" ? "background" : "#F5F5F5"}
-              color={category === "Activity" ? "#FFF" : "#969CB2"}
+              bg="#F5F5F5"
+              p=".5rem"
             >
-              <Text>Tarefas</Text>
-            </Button>
-            <Button
-              display="flex"
-              alignItems="center"
-              gap=".5rem"
-              flex={1}
-              type="button"
-              transition=".25s"
-              borderRadius=".25rem"
-              justifyContent="center"
-              background={category === "Event" ? "background" : "#F5F5F5"}
-              color={category === "Event" ? "#FFF" : "#969CB2"}
-              onClick={() => setCategory("Event")}
-            >
-              <Text>Eventos</Text>
-            </Button>
-          </Flex>
+              <Input
+                placeholder="Data Encerramento"
+                bg="#F5F5F5"
+                p=".25rem"
+                color="#969CB2"
+                {...register("finishedAt", { required: "Data de conclusão obrigatório" })}
+                type="date"
+                css={{
+                  '&::-webkit-calendar-picker-indicator': {
+                    display: 'none',
+                    '-webkit-appearance': 'none',
+                  },
+                }}
+                mr=".25rem"
+                variant="unstyled"
+              />
+              <FiCalendar color="#A2A7BA" />
+            </Flex>
 
-        </Stack>
+            <Flex gap=".5rem">
+              <Button
+                flex={1}
+                borderRadius=".25rem"
+                type="button"
+                transition=".25s"
+                background={getValues("category") === "Activity" ? "background" : "#F5F5F5"}
+                color={getValues("category") === "Activity" ? "#FFF" : "#969CB2"}
+                onClick={() => {
+                  setValue("category", "Activity", {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                    shouldTouch: true
+                  });
+                }}
+              >
+                <Text>Tarefas</Text>
+              </Button>
+              <Button
+                display="flex"
+                alignItems="center"
+                gap=".5rem"
+                flex={1}
+                type="button"
+                borderRadius=".25rem"
+                transition=".25s"
+                justifyContent="center"
+                background={getValues("category") === "Event" ? "background" : "#F5F5F5"}
+                color={getValues("category") === "Event" ? "#FFF" : "#969CB2"}
+                onClick={() => setValue("category", "Event", {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                  shouldTouch: true
+                })}
+              >
+                <Text>Eventos</Text>
+              </Button>
+            </Flex>
+          </Stack>
+
+          <Stack spacing=".5rem" mt="2rem">
+            {errors &&
+              Object.keys(errors)
+                .map(errorName => {
+                  const randomId = Math.random();
+                  const error = errors[errorName] as FieldError;
+
+                  return (
+                    <Alert
+                      key={randomId}
+                      status='error'
+                      variant='left-accent'
+                      bg="rgba(255, 135, 44, .25)"
+                    >
+                      <AlertIcon />
+                      {error.message}
+                    </Alert>
+                  )
+                })
+            }
+          </Stack>
+        </Box>
 
         <Button
           bg="rgba(255, 135, 44, 1)"
@@ -187,3 +234,4 @@ export function CreateTask() {
     </>
   )
 }
+

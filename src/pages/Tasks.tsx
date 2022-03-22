@@ -3,6 +3,7 @@ import { Box, Flex, Text, Image } from "@chakra-ui/react";
 import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
+import { FiAlertCircle } from "react-icons/fi";
 import { MdLogout } from "react-icons/md";
 
 import { useAuth } from "../contexts/AuthContext";
@@ -11,8 +12,6 @@ import { auth, database } from "../services/firebase";
 import { List } from "../components/List";
 import { Splash } from "./Splash";
 import { SpeedDial } from "../components/SpeedDial";
-import { Search } from "../components/Search";
-import { FiAlertCircle } from "react-icons/fi";
 
 type Task = {
   id: string;
@@ -49,19 +48,11 @@ export function Tasks() {
           }
         }) as Task[];
 
-        if (tasks.length > 0) {
-          localStorage.setItem("@lastTasksStoraged", JSON.stringify(tasks.length));
-        } else {
-          localStorage.setItem("@lastTasksStoraged", JSON.stringify(0));
-        }
-
-        console.log(tasks);
         setTasks(tasks);
       })
       .catch(error => console.log(error))
       .finally(() => setLoadTaks(false));
   }, [user]);
-
 
   async function handleSignOut() {
     try {
@@ -79,10 +70,11 @@ export function Tasks() {
           justify="space-between"
           align="center"
           maxW={720}
+          as="header"
           w="90%"
           mx="auto"
         >
-          <Flex align="center" gap=".25rem">
+          <Flex align="center">
             <Image
               src={String(user.photoURL)}
               w="30px"
@@ -95,6 +87,7 @@ export function Tasks() {
               fontSize="1.25rem"
               color="#FFF"
               ml=".125rem"
+              as="h2"
             >
               {user.displayName}
             </Text>
@@ -113,6 +106,7 @@ export function Tasks() {
         mt={-5}
         w="90%"
         mx="auto"
+        as="main"
       >
         {tasks.length ? (
           tasks.map(task => {
