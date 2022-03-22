@@ -202,9 +202,11 @@ export function CreateTask() {
           <Stack spacing=".5rem" mt="2rem">
             {errors &&
               Object.keys(errors)
-                .map(errorName => {
+                .map((errorName) => {
                   const randomId = Math.random();
-                  const error = errors[errorName] as FieldError;
+                  
+                  const fields = errorName as "name" | "category" | "finishedAt";
+                  const { message } = errors[fields] as FieldError;
 
                   return (
                     <Alert
@@ -214,7 +216,7 @@ export function CreateTask() {
                       bg="rgba(255, 135, 44, .25)"
                     >
                       <AlertIcon />
-                      {error.message}
+                      {message}
                     </Alert>
                   )
                 })
