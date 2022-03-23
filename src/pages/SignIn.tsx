@@ -1,9 +1,10 @@
-import { Box, Button, Flex, Heading, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Text, Image } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { MdLogin } from "react-icons/md";
-import { FaTasks } from "react-icons/fa";
 
 import { useAuth } from "../contexts/AuthContext";
+
+import logoImage from "../assets/logo.svg";
 
 export function SignIn() {
   const navigate = useNavigate();
@@ -19,38 +20,35 @@ export function SignIn() {
     <Box
       bg="background"
       h="100vh"
-      pt="25vh"
     >
+      <Image src={logoImage} pt="2.5rem" mx="auto"/>
       <Flex
         maxW={720}
         mx="auto"
+        mt="-.75rem"
         w="90%"
         direction="column"
-        position="relative"
-        h="70vh"
         justify="space-between"
+        h="55vh"
       >
-        <Box>
-          <Flex align="baseline">
-            <FaTasks color="#FFF" size={32} />
-            <Heading
-              as="h1"
-              color="primaryText"
-              fontSize="3rem"
-              ml={5}
-            >
-              Activer
-            </Heading>
-          </Flex>
+        <Box
+          maxW={190}
+          mx="auto"
+          mt="-.75rem"
+        >
           <Text
-            maxW={225}
-            textAlign="left"
-            fontSize={28}
-            mt="4rem"
             color="primaryText"
+            fontSize="3.25rem"
+            as="strong"
           >
-            Seu gerenciador online
-            de tarefas e eventos.
+            Activ<Text color="heading" as="span">er.</Text>
+          </Text>
+          <Text
+            color="rgba(255, 255, 255, 1)"
+            fontSize="1rem"
+            fontWeight={600}
+          >
+            Seu Gerenciador online de tarefas e eventos
           </Text>
         </Box>
 
@@ -68,17 +66,6 @@ export function SignIn() {
           </Text>
           <MdLogin color="background" size={20} />
         </Button>
-
-        <FaTasks
-          size={125}
-          color="rgba(255, 255, 255, .1)"
-          style={{
-            position: "absolute",
-            bottom: "100%",
-            left: 0,
-            transform: "translate(-10%, 80%)",
-          }}
-        />
       </Flex>
     </Box>
   );

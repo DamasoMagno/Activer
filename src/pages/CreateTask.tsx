@@ -1,45 +1,30 @@
-import { Alert, AlertIcon, Box, Button, Flex, Input, Stack, Text, useToast } from "@chakra-ui/react";
+import { Alert, AlertIcon, Box, Button, Flex, Input, Select, Stack, Text, useToast } from "@chakra-ui/react";
 import { addDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { useState } from "react";
 import { FiCalendar } from "react-icons/fi";
 import { MdArrowBackIos } from "react-icons/md";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useModal } from "../contexts/ModalContext";
 import { database } from "../services/firebase";
 import { FieldError, useForm } from "react-hook-form";
 
 type Task = {
   name: string;
   finishedAt: Date;
-  category: "" | "Activity" | "Event";
+  category: "Activity" | "Event";
 }
 
 export function CreateTask() {
-  const navigate = useNavigate();
-
   const { user } = useAuth();
+  const { openModal } = useModal();
   const toast = useToast();
 
   const [loadButton, setLoadButton] = useState(false);
 
-  const {
-    register,
-    setValue,
-    getValues,
-    setError,
-    handleSubmit,
-    formState: { errors }
-  } = useForm<Task>();
+  const { register, handleSubmit, formState: { errors } } = useForm<Task>();
 
   async function handleAddTask(data: Task) {
-    if (!getValues("category")) {
-      setError("category", {
-        message: "Categoria não selecionada"
-      })
-
-      return;
-    }
-
     try {
       setLoadButton(true);
 
@@ -75,7 +60,11 @@ export function CreateTask() {
 
       setLoadButton(false);
 
-      navigate("/confirmation/register")
+      openModal({
+        title: "Tarefa criada!",
+        description: "Tarefa criada com sucesso",
+        pageDestination: "/"
+      });
     } catch (error) {
       console.log(error);
     }
@@ -129,9 +118,6 @@ export function CreateTask() {
               border={0}
               borderRadius=".25rem"
               {...register("name", { required: "Nome obrigatório" })}
-              _focus={{
-                border: "none"
-              }}
             />
 
             <Flex
@@ -159,54 +145,27 @@ export function CreateTask() {
               <FiCalendar color="#A2A7BA" />
             </Flex>
 
-            <Flex gap=".5rem">
-              <Button
-                flex={1}
-                borderRadius=".25rem"
-                type="button"
-                transition=".25s"
-                background={getValues("category") === "Activity" ? "background" : "#F5F5F5"}
-                color={getValues("category") === "Activity" ? "#FFF" : "#969CB2"}
-                onClick={() => {
-                  setValue("category", "Activity", {
-                    shouldValidate: true,
-                    shouldDirty: true,
-                    shouldTouch: true
-                  });
-                }}
-              >
-                <Text>Tarefas</Text>
-              </Button>
-              <Button
-                display="flex"
-                alignItems="center"
-                gap=".5rem"
-                flex={1}
-                type="button"
-                borderRadius=".25rem"
-                transition=".25s"
-                justifyContent="center"
-                background={getValues("category") === "Event" ? "background" : "#F5F5F5"}
-                color={getValues("category") === "Event" ? "#FFF" : "#969CB2"}
-                onClick={() => setValue("category", "Event", {
-                  shouldValidate: true,
-                  shouldDirty: true,
-                  shouldTouch: true
-                })}
-              >
-                <Text>Eventos</Text>
-              </Button>
-            </Flex>
+            <Select
+              bg="#F5F5F5"
+              color="#969CB2"
+              placeholder='Categoria'
+              border={0}
+              borderRadius=".25rem"
+              {...register("category", { required: "Categoria obrigatório" })}
+            >
+              <option value="Activity">Atividade</option>
+              <option value="Evento">Evento</option>
+            </Select>
           </Stack>
 
-          <Stack spacing=".5rem" mt="2rem">
+          <Stack spacing=".25rem" mt="2rem">
             {errors &&
               Object.keys(errors)
                 .map((errorName) => {
                   const randomId = Math.random();
-                  
-                  const fields = errorName as "name" | "category" | "finishedAt";
-                  const { message } = errors[fields] as FieldError;
+
+                  const field = errorName as "name" | "category" | "finishedAt";
+                  const { message } = errors[field] as FieldError;
 
                   return (
                     <Alert

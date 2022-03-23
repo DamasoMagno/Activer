@@ -1,19 +1,17 @@
 import { useEffect, useState } from "react";
-import { Box, Button, Flex, Input, Text } from "@chakra-ui/react";
-import { collection, deleteDoc, doc, getDocs, getFirestore, orderBy, query, where } from "firebase/firestore";
-import { FiUser, FiUpload, FiAlertCircle } from "react-icons/fi";
-import { MdArrowBackIos, MdDone, MdSearch, MdShare, MdUpload } from "react-icons/md";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Box, Flex, Text } from "@chakra-ui/react";
+import { collection, deleteDoc, doc, getDocs, orderBy, query, where } from "firebase/firestore";
+import { FiUser, FiAlertCircle } from "react-icons/fi";
+import { MdArrowBackIos, MdDone, MdShare, MdUpload } from "react-icons/md";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
-import { app, database } from "../services/firebase";
-import { SkeletonEffect } from "../utils/skeleton";
+import { database } from "../services/firebase";
 
 import { List } from "../components/List";
 import { useAuth } from "../contexts/AuthContext";
 import { Splash } from "./Splash";
 import { SpeedDial } from "../components/SpeedDial";
 import { SpeedButton } from "../components/SpeedDial/button";
-import { Search } from "../components/Search";
 
 export type StudentActivity = {
   id: string;

@@ -8,6 +8,7 @@ import { MdArrowBackIos, MdCloudUpload, MdSend } from "react-icons/md";
 import { useAuth } from "../contexts/AuthContext";
 import { database, storage } from "../services/firebase";
 import { Splash } from "./Splash";
+import { useModal } from "../contexts/ModalContext";
 
 type Task = {
   userId: string;
@@ -30,6 +31,7 @@ export function Deliver() {
   const toast = useToast();
 
   const { user } = useAuth();
+  const { openModal } = useModal();
 
   const [attachments, setAttachments] = useState({} as File);
   const [previewAttachments, setPreviewAttachments] = useState<string>("");
@@ -46,7 +48,13 @@ export function Deliver() {
         const data = response.data() as Task;
 
         if (!data) {
-          navigate("/confirmation/deliverFinished")
+          openModal({
+            title: "Tarefa concluída!",
+            description: "Esta tarefa já foi concluida",
+            pageDestination: "/"
+          });
+
+          return;
         }
       });
   }, []);
@@ -122,7 +130,11 @@ export function Deliver() {
 
         setActivityLoading(false);
 
-        navigate("/confirmation/deliver");
+        openModal({
+          title: "Tarefa enviada!",
+          description: "Tarefa enviada com sucesso.",
+          pageDestination: "/"
+        });
 
         return;
       }
@@ -141,7 +153,11 @@ export function Deliver() {
         }
       );
 
-      navigate("/confirmation/deliver");
+      openModal({
+        title: "Tarefa enviada!",
+        description: "Tarefa enviada com sucesso.",
+        pageDestination: "/"
+      });
     } catch (error) {
       console.log(error);
     }

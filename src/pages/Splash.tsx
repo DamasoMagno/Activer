@@ -1,42 +1,51 @@
-import { Center, Flex, Stack, Text } from "@chakra-ui/react";
-import { FaTasks } from "react-icons/fa";
+import { Box, Flex, Image, Text, keyframes } from "@chakra-ui/react";
+
+import logoImage from "../assets/logo.svg";
 
 export function Splash() {
+  const spin = keyframes`
+  0% { position: relative; top: 0; }
+  50% { position: relative; top: 10px }
+  100% { position: relative; top: 0 }
+`
+
   return (
-    <Center
+    <Box
       h="100vh"
       bg="background"
       maxW="100%"
       mx="auto"
     >
       <Flex
-        as={Stack}
-        spacing={4}
-        maxW={720}
+        w="100%"
         mx="auto"
-        align="center"
-        position="relative"
+        maxW={720}
         direction="column"
       >
-        <FaTasks color="#FFF" size={50} />
-        <Text
-          color="#FFF"
-          fontSize="1.5rem"
+        <Image src={logoImage} mt="2.5rem"/>
+        <Flex 
+          direction="column"
+          maxW={190}
+          mx="auto"
+          mt="-.75rem"
+          animation={`${spin} infinite .85s linear`} 
         >
-          Carregando
-        </Text>
-
-        <FaTasks
-          size={300}
-          color="rgba(255, 255, 255, .25)"
-          style={{
-            position: "absolute",
-            left: "-50vw",
-            top: "-20vh",
-            transform: "translateY(-50%)"
-          }}
-        />
+          <Text
+            color="primaryText"
+            fontSize="3.25rem"
+            as="strong"
+          >
+            Activ<Text color="heading" as="span">er.</Text>
+          </Text>
+          <Text 
+            color="rgba(255, 255, 255, 1)" 
+            fontSize="1rem"
+            fontWeight={600}
+          >
+            Seu Gerenciador online de tarefas e eventos
+          </Text>
+        </Flex>
       </Flex>
-    </Center>
+    </Box>
   );
 }

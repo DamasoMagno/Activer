@@ -6,7 +6,7 @@ import { SignIn } from "./pages/SignIn";
 import { Student } from "./pages/Student";
 import { Tasks } from "./pages/Tasks";
 import { CreateTask } from "./pages/CreateTask";
-import { ActionConfirmation } from "./pages/ActionConfirmation";
+import { Splash } from "./pages/Splash";
 
 
 export function RoutesApp() {
@@ -18,7 +18,7 @@ export function RoutesApp() {
       <Route path="/deliver/:id" element={<Deliver />} />
       <Route path="/deliveries/:id" element={<Deliveries />} />
       <Route path="/student/:id" element={<Student />} />
-      <Route path="/confirmation/:pageType" element={<ActionConfirmation />} />
+      <Route path="/splash" element={<Splash />} />
     </Routes>
   );
 }
