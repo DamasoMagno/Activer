@@ -153,6 +153,8 @@ export function Deliver() {
         }
       );
 
+      setActivityLoading(false);
+
       openModal({
         title: "Tarefa enviada!",
         description: "Tarefa enviada com sucesso.",
